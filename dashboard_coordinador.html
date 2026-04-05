@@ -150,7 +150,7 @@ tr:hover td{background:#fafafe}
       <div class="nav-item" onclick="showSection('autoevaluaciones',this)">★ Autoevaluaciones</div>
       <div class="nav-item" onclick="showSection('eval-convertir',this)">▲ Eval. CONVERTIR</div>
       <div class="nav-item" onclick="showSection('eval-ventas',this)">◆ Eval. Ventas</div>
-      <div class="nav-item" onclick="showSection('promotores',this)">👤 Promotores</div>
+      <div class="nav-item" onclick="showSection('promotores',this);renderHistorialCompleto()">👤 Promotores</div>
       <div class="nav-sep"></div>
       <div class="nav-item nav-admin" id="admin-nav" style="display:none" onclick="showSection('admin',this)">⚙ Administración</div>
     </div>
@@ -221,11 +221,17 @@ tr:hover td{background:#fafafe}
 
     <!-- PROMOTORES -->
     <div id="sec-promotores" style="display:none">
-      <div class="page-header"><div class="page-title">Perfil de promotores</div><div class="page-sub">Historial y progreso individual</div></div>
+      <div class="page-header"><div class="page-title">Promotores</div><div class="page-sub">Historial completo de evaluaciones</div></div>
       <div class="filters">
-        <input type="text" id="f-prom-search" placeholder="Buscar promotor..." oninput="buscarPromotor()">
+        <input type="text" id="f-prom-search" placeholder="Buscar por nombre..." oninput="buscarPromotor()">
+        <select id="f-prom-tipo" onchange="renderHistorialCompleto()" style="padding:7px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;background:#fff;font-family:Montserrat,sans-serif">
+          <option value="">Todos los tipos</option>
+          <option value="auto">Autoevaluación</option>
+          <option value="conv">Eval. CONVERTIR</option>
+          <option value="vent">Eval. Ventas</option>
+        </select>
       </div>
-      <div id="promotores-list"><div class="loading">Busca un promotor por nombre para ver su perfil</div></div>
+      <div id="promotores-list"></div>
       <div id="promotor-detail" style="display:none"></div>
     </div>
 
@@ -525,19 +531,79 @@ function filtrarTabla(key){
   document.getElementById(id).innerHTML=html+'</tbody></table>';
 }
 
-function buscarPromotor(){
-  const q=document.getElementById('f-prom-search').value.toLowerCase();
-  if(q.length<2){document.getElementById('promotores-list').innerHTML='<div class="loading">Busca un promotor por nombre</div>';document.getElementById('promotor-detail').style.display='none';return;}
-  const names=new Set();
-  [...allData.auto.rows,...allData.conv.rows,...allData.vent.rows].forEach(r=>{if(String(r[1]).toLowerCase().includes(q))names.add(r[1]);});
-  if(!names.size){document.getElementById('promotores-list').innerHTML='<div class="empty">No se encontraron promotores con ese nombre.</div>';return;}
-  let html='';
-  names.forEach(name=>{
-    const initials=name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
-    html+='<div class="admin-user-card" style="cursor:pointer" onclick="verPerfilPromotor(\''+ name +'\')">'+
-      '<div class="admin-user-info"><div class="admin-user-avatar">'+initials+'</div><div><div class="admin-user-name">'+name+'</div><div class="admin-user-role">Ver perfil completo →</div></div></div></div>';
+function tiempoTranscurrido(ts){
+  if(!ts)return'—';
+  const diff=Date.now()-new Date(ts).getTime();
+  const mins=Math.floor(diff/60000);
+  const hrs=Math.floor(mins/60);
+  const dias=Math.floor(hrs/24);
+  if(dias>0)return'hace '+dias+(dias===1?' día':' días');
+  if(hrs>0)return'hace '+hrs+(hrs===1?' hora':' horas');
+  if(mins>0)return'hace '+mins+(mins===1?' min':' mins');
+  return'hace un momento';
+}
+
+function renderHistorialCompleto(){
+  const q=(document.getElementById('f-prom-search')||{}).value?.toLowerCase()||'';
+  const tipoFiltro=(document.getElementById('f-prom-tipo')||{}).value||'';
+  document.getElementById('promotor-detail').style.display='none';
+
+  // Armar lista unificada de todas las evaluaciones
+  const filas=[];
+  if(!tipoFiltro||tipoFiltro==='auto'){
+    allData.auto.rows.forEach(r=>{filas.push({tipo:'Autoevaluación',color:'#534AB7',nombre:r[1],regional:r[2],cadena:r[3],fecha:r[4]||String(r[0]).slice(0,10),timestamp:r[0],pct:getPctNum(r[7]),nivel:r[8],raw:r,tipoKey:'auto',idx:allData.auto.rows.indexOf(r)});});
+  }
+  if(!tipoFiltro||tipoFiltro==='conv'){
+    allData.conv.rows.forEach(r=>{filas.push({tipo:'Eval. CONVERTIR',color:'#854F0B',nombre:r[1],regional:r[2],cadena:r[3],fecha:r[4]||String(r[0]).slice(0,10),timestamp:r[0],pct:getPctNum(r[5]),nivel:r[6],raw:r,tipoKey:'conv',idx:allData.conv.rows.indexOf(r)});});
+  }
+  if(!tipoFiltro||tipoFiltro==='vent'){
+    allData.vent.rows.forEach(r=>{filas.push({tipo:'Eval. Ventas',color:'#185FA5',nombre:r[1],regional:r[2],cadena:r[3],fecha:r[4]||String(r[0]).slice(0,10),timestamp:r[0],pct:getPctNum(r[5]),nivel:r[6],raw:r,tipoKey:'vent',idx:allData.vent.rows.indexOf(r)});});
+  }
+
+  // Filtrar por nombre si hay búsqueda
+  const filtradas=q.length>=2?filas.filter(f=>String(f.nombre).toLowerCase().includes(q)):filas;
+
+  // Ordenar por timestamp más reciente primero
+  filtradas.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+
+  if(!filtradas.length){
+    document.getElementById('promotores-list').innerHTML='<div class="empty">No hay evaluaciones registradas aún.</div>';
+    return;
+  }
+
+  let html=`<div class="card"><div class="card-title">Evaluaciones registradas <span style="font-size:12px;font-weight:400;color:#888">${filtradas.length} en total</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th>Promotor</th><th>Tipo</th><th>Regional</th><th>Cadena</th>
+      <th>Fecha</th><th>Hace</th><th>Puntaje</th><th>Nivel</th><th>Detalle</th>
+    </tr></thead><tbody>`;
+
+  filtradas.forEach(f=>{
+    const initials=String(f.nombre).split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    html+=`<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:7px;background:${f.color};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
+          <span style="font-weight:600;cursor:pointer;color:#534AB7" onclick="verPerfilPromotor('${f.nombre}')">${f.nombre}</span>
+        </div>
+      </td>
+      <td><span style="font-size:11px;font-weight:600;color:${f.color}">${f.tipo}</span></td>
+      <td>${f.regional||'—'}</td>
+      <td style="font-size:11px">${f.cadena||'—'}</td>
+      <td style="font-size:11px">${f.fecha}</td>
+      <td style="font-size:11px;color:#888">${tiempoTranscurrido(f.timestamp)}</td>
+      <td><b style="color:${f.pct>=80?'#0F6E56':f.pct>=60?'#534AB7':f.pct>=40?'#854F0B':'#A32D2D'}">${f.pct}%</b></td>
+      <td>${getNivelBadge(f.nivel)}</td>
+      <td><button class="btn-sm btn-purple" style="font-size:10px;padding:3px 8px" onclick="verDetalleEval('${f.tipoKey}',${f.idx})">👁 Ver</button></td>
+    </tr>`;
   });
+
+  html+='</tbody></table></div></div>';
   document.getElementById('promotores-list').innerHTML=html;
+}
+
+function buscarPromotor(){
+  renderHistorialCompleto();
 }
 
 function verPerfilPromotor(nombre){
