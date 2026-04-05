@@ -594,7 +594,9 @@ function descargarPDF() {
 function guardarDatos() {
   const st = document.getElementById('save-status');
   const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxVB9q9XnAUN0vSH4v_avsbky2rROE-eVVqq8rj-9BW1hlR_5grfKyRXqBDXS5E8YXH/exec';
-  const row = [gData.timestamp, gData.nombre, gData.regional, gData.pdv, gData.fecha, gData.pct+'%', gData.nivel, gData.ok, gData.total, gData.b1+'%', gData.b2+'%', gData.b3+'%', gData.b4+'%'];
+  const ahora=new Date();
+  const tsCO=ahora.toLocaleString('es-CO',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).replace(',','');
+  const row = [tsCO, gData.nombre, gData.regional||'', gData.pdv||'', gData.cadena||'', gData.fecha, gData.pct+'%', gData.nivel, gData.ok, gData.total, gData.b1+'%', gData.b2+'%', gData.b3+'%', gData.b4+'%'];
   if(st){st.textContent = 'Guardando...'; st.style.color = '#534AB7';}
   fetch(SHEET_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({tipo:'evaluacion_ventas', datos:row})})
   .then(() => { if(st){st.textContent = '✓ Datos guardados automáticamente.'; st.style.color = '#0F6E56';} })
