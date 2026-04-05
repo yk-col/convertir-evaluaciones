@@ -466,6 +466,7 @@ function calcular(){
   document.getElementById('resultados').scrollIntoView({behavior:'smooth'});
   setTimeout(()=>enviarSheets(),800);
 }
+function descargarPDF(){
   if(!globalData.nombre){alert('Completa tu nombre antes de descargar.');return;}
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF();
