@@ -56,6 +56,33 @@
     <div class="dato"><label>Nombre completo</label><input type="text" id="nombre" placeholder="Tu nombre completo"></div>
     <div class="dato"><label>Fecha</label><input type="date" id="fecha"></div>
   </div>
+  <div style="margin-bottom:10px">
+    <label style="font-size:12px;color:var(--color-text-secondary,#666);display:block;margin-bottom:4px">Regional</label>
+    <select id="regional" style="width:100%;padding:8px 10px;border:0.5px solid #ccc;border-radius:8px;font-size:13px;background:#fff">
+      <option value="">— Selecciona tu regional —</option>
+      <option value="Antioquia">Antioquia</option>
+      <option value="Centro">Centro</option>
+      <option value="Eje Cafetero">Eje Cafetero</option>
+      <option value="Norte">Norte</option>
+      <option value="Occidente">Occidente</option>
+      <option value="Oriente">Oriente</option>
+    </select>
+  </div>
+  <div style="margin-bottom:10px">
+    <label style="font-size:12px;color:var(--color-text-secondary,#666);display:block;margin-bottom:4px">Cadena</label>
+    <select id="cadena" style="width:100%;padding:8px 10px;border:0.5px solid #ccc;border-radius:8px;font-size:13px;background:#fff">
+      <option value="">— Selecciona tu cadena —</option>
+      <option value="ALMACENES ÉXITO S.A">ALMACENES ÉXITO S.A</option>
+      <option value="ALMACENES MAXIMO S.A.S. PEPE GANGA">ALMACENES MAXIMO S.A.S. PEPE GANGA</option>
+      <option value="CENCOSUD COLOMBIA S.A.">CENCOSUD COLOMBIA S.A.</option>
+      <option value="COLOMBIANA DE COMERCIO Y/O ALKOSTO S.A.">COLOMBIANA DE COMERCIO Y/O ALKOSTO S.A.</option>
+      <option value="FALABELLA">FALABELLA</option>
+      <option value="MECANELECTRO S.A.S">MECANELECTRO S.A.S</option>
+      <option value="SODIMAC COLOMBIA S.A.(HOMECENTER)">SODIMAC COLOMBIA S.A.(HOMECENTER)</option>
+      <option value="SUPERTIENDAS Y DROGUERIAS OLIMPICAS S.A.">SUPERTIENDAS Y DROGUERIAS OLIMPICAS S.A.</option>
+      <option value="PANAMERICANA">PANAMERICANA</option>
+    </select>
+  </div>
   <div class="pdv-wrap">
     <label>Punto de venta</label>
     <input type="text" id="pdv" placeholder="Nombre de la tienda">
@@ -409,7 +436,7 @@ function evaluar(){
   const n=niveles.find(x=>pct>=x.min&&pct<=x.max)||niveles[0];
   document.getElementById('fc-badge-wrap').innerHTML=`<span class="fc-badge" style="background:${n.bg};color:${n.c}">${n.label}</span>`;
   document.getElementById('fc-desc').textContent=n.desc;
-  gData={nombre:document.getElementById('nombre').value,fecha:document.getElementById('fecha').value,pdv:document.getElementById('pdv').value,pct,nivel:n.label,ok,total,timestamp:new Date().toISOString()};
+  gData={nombre:document.getElementById('nombre').value,regional:document.getElementById('regional')?document.getElementById('regional').value:'',cadena:document.getElementById('cadena')?document.getElementById('cadena').value:'',fecha:document.getElementById('fecha').value,pdv:document.getElementById('pdv').value,pct,nivel:n.label,ok,total,timestamp:new Date().toISOString()};
   document.getElementById('resultado').scrollIntoView({behavior:'smooth'});
   setTimeout(()=>enviarSheets(),800);
 }
@@ -417,7 +444,9 @@ function evaluar(){
 function enviarSheets(){
   const st=document.getElementById('sheets-status');
   const SHEET_URL='https://script.google.com/macros/s/AKfycbxVB9q9XnAUN0vSH4v_avsbky2rROE-eVVqq8rj-9BW1hlR_5grfKyRXqBDXS5E8YXH/exec';
-  const row=[gData.timestamp,gData.nombre,gData.fecha,gData.pdv,gData.pct+'%',gData.nivel,gData.ok,gData.total];
+  const ahora=new Date();
+  const tsCO=ahora.toLocaleString('es-CO',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).replace(',','');
+  const row=[tsCO,gData.nombre,gData.regional||'',gData.pdv||'',gData.cadena||'',gData.fecha,gData.pct+'%',gData.nivel,gData.ok,gData.total];
   if(st){st.textContent='Guardando...';st.style.color='#534AB7';}
   fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tipo:'evaluacion_convertir',datos:row})})
   .then(()=>{if(st){st.textContent='✓ Datos guardados automáticamente.';st.style.color='#0F6E56';}})
