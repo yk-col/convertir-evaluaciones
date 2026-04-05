@@ -198,6 +198,26 @@ tr:hover td{background:#fafafe}
         <div class="chart-card"><div class="chart-title">Promedio por regional</div><div class="chart-wrap"><canvas id="chart-regional"></canvas></div></div>
         <div class="chart-card"><div class="chart-title">Tendencia de resultados</div><div class="chart-wrap"><canvas id="chart-tendencia"></canvas></div></div>
       </div>
+      <!-- Panel solo para admin -->
+      <div id="admin-resumen-panel" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <!-- Últimos accesos coordinadores -->
+          <div class="card">
+            <div class="card-title">🕐 Últimos accesos coordinadores</div>
+            <div id="admin-last-logins"><div class="empty">Sin registros de acceso aún.</div></div>
+          </div>
+          <!-- Indicadores por regional -->
+          <div class="card">
+            <div class="card-title">📈 Indicadores de avance por regional</div>
+            <div id="admin-indicadores"><div class="empty">Sin datos aún.</div></div>
+          </div>
+        </div>
+        <!-- Tabla resumen de cobertura -->
+        <div class="card">
+          <div class="card-title">📊 Cobertura de evaluaciones por regional</div>
+          <div class="table-wrap"><div id="admin-cobertura"></div></div>
+        </div>
+      </div>
     </div>
 
     <!-- AUTOEVALUACIONES -->
@@ -358,7 +378,14 @@ function login(){
   document.getElementById('sb-user-name').textContent=found.name;
   document.getElementById('sb-user-role').textContent=found.regional==='admin'?'Administrador':'Coordinador · '+found.regional;
   if(found.regional==='admin'){document.getElementById('admin-nav').style.display='flex';document.getElementById('dash-title').textContent='Panel nacional';}
-  else document.getElementById('dash-title').textContent='Panel — Regional '+found.regional;
+  else{
+    document.getElementById('dash-title').textContent='Panel — Regional '+found.regional;
+    // Registrar acceso para panel admin
+    const logins=JSON.parse(localStorage.getItem('convertir_logins')||'[]');
+    logins.push({name:found.name,regional:found.regional,ts:new Date().toISOString()});
+    if(logins.length>50)logins.splice(0,logins.length-50);
+    localStorage.setItem('convertir_logins',JSON.stringify(logins));
+  }
   if(window.innerWidth<=768)closeSidebar();
   cargarTodos();
 }
@@ -387,6 +414,10 @@ function cargarTodos(){
     renderResumen();
     renderTabla('auto');renderTabla('conv');renderTabla('vent');
     document.getElementById('dash-sub').textContent='Actualizado · '+fmtTS(new Date().toISOString());
+    if(currentUser.regional==='admin'){
+      document.getElementById('admin-resumen-panel').style.display='block';
+      renderAdminPanel();
+    }
   }).catch(()=>{document.getElementById('dash-sub').textContent='Error de conexión';});
 }
 
@@ -433,13 +464,27 @@ function nivelBadge(n){
 function pctColor(p){return p>=80?'#0F6E56':p>=60?'#534AB7':p>=40?'#854F0B':'#A32D2D';}
 function getCCIdx(h){
   if(!h)return -1;
-  // Buscar exactamente columna 'CC' o 'Cedula'/'Cédula'
   const idx=h.findIndex(x=>{
     const s=String(x).trim().toLowerCase()
       .replace(/á/g,'a').replace(/é/g,'e').replace(/í/g,'i').replace(/ó/g,'o').replace(/ú/g,'u');
-    return s==='cc'||s==='cedula'||s==='cédula'||s==='cedula_promotor'||s==='num_cedula';
+    return s==='cc'||s==='cedula'||s==='cedula_promotor'||s==='num_cedula';
   });
   return idx;
+}
+
+// Posición fija de CC por tipo cuando no hay header con CC
+// auto: índice 12 (después de AreasDebiles)
+// conv: índice 10 (después de Total)
+// vent: índice 14 (después de b4)
+const CC_FIXED={auto:12,conv:10,vent:14};
+
+function getCC(r,headers,key){
+  const idx=getCCIdx(headers);
+  if(idx>=0)return String(r[idx]||'');
+  // fallback por posición fija
+  const fi=CC_FIXED[key];
+  if(fi!==undefined&&r[fi]!==undefined&&r[fi]!=='')return String(r[fi]);
+  return '';
 }
 function getFiltered(key){
   const rows=allData[key].rows;
@@ -469,16 +514,13 @@ function renderResumen(){
 }
 function dc(id){if(chartRefs[id]){try{chartRefs[id].destroy();}catch(e){}delete chartRefs[id];}}
 function drawCharts(aR,cR,vR){
-  // Niveles
+  // Niveles — auto:col9(Perfil), conv:col7(Nivel), vent:col7(Nivel)
   dc('niv');
   const cn={Destacado:0,Competente:0,'En proceso':0,'En desarrollo':0};
-  [...aR,...cR,...vR].forEach(r=>{
-    const n=String(r[9]||r[7]||'');
-    if(n.includes('Dest'))cn.Destacado++;
-    else if(n.includes('Comp'))cn.Competente++;
-    else if(n.toLowerCase().includes('proc'))cn['En proceso']++;
-    else if(n.length>2)cn['En desarrollo']++;
-  });
+  const getNivel=(r,tipo)=>String(tipo==='auto'?r[9]:r[7]||'');
+  aR.forEach(r=>{const n=getNivel(r,'auto');if(n.includes('Dest'))cn.Destacado++;else if(n.includes('Comp'))cn.Competente++;else if(n.toLowerCase().includes('proc'))cn['En proceso']++;else if(n.length>2)cn['En desarrollo']++;});
+  cR.forEach(r=>{const n=getNivel(r,'conv');if(n.includes('Dest'))cn.Destacado++;else if(n.includes('Comp'))cn.Competente++;else if(n.toLowerCase().includes('proc'))cn['En proceso']++;else if(n.length>2)cn['En desarrollo']++;});
+  vR.forEach(r=>{const n=getNivel(r,'vent');if(n.includes('Dest'))cn.Destacado++;else if(n.includes('Comp'))cn.Competente++;else if(n.toLowerCase().includes('proc'))cn['En proceso']++;else if(n.length>2)cn['En desarrollo']++;});
   chartRefs.niv=new Chart(document.getElementById('chart-niveles'),{type:'doughnut',data:{labels:Object.keys(cn),datasets:[{data:Object.values(cn),backgroundColor:['#0F6E56','#185FA5','#854F0B','#A32D2D'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Montserrat',size:10},boxWidth:10}}}}});
   // Tipos
   dc('tip');
@@ -486,7 +528,10 @@ function drawCharts(aR,cR,vR){
   chartRefs.tip=new Chart(document.getElementById('chart-tipos'),{type:'bar',data:{labels:['Autoevaluación','Eval. CONVERTIR','Eval. Ventas'],datasets:[{data:[avg(aR,8),avg(cR,6),avg(vR,6)],backgroundColor:['#534AB7','#854F0B','#0F6E56'],borderRadius:8,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{font:{family:'Montserrat',size:10}}},x:{ticks:{font:{family:'Montserrat',size:10}}}}}});
   // Regional
   dc('reg');
-  const rd={};[...aR,...cR,...vR].forEach(r=>{const reg=r[2]||'?';const p=pct(r[8]||r[6]);if(!rd[reg])rd[reg]=[];if(p>0)rd[reg].push(p);});
+  const rd={};
+  aR.forEach(r=>{const reg=r[2]||'?';const p=pct(r[8]);if(!rd[reg])rd[reg]=[];if(p>0)rd[reg].push(p);});
+  cR.forEach(r=>{const reg=r[2]||'?';const p=pct(r[6]);if(!rd[reg])rd[reg]=[];if(p>0)rd[reg].push(p);});
+  vR.forEach(r=>{const reg=r[2]||'?';const p=pct(r[6]);if(!rd[reg])rd[reg]=[];if(p>0)rd[reg].push(p);});
   const rl=Object.keys(rd),rp=rl.map(r=>rd[r].length?Math.round(rd[r].reduce((a,b)=>a+b,0)/rd[r].length):0);
   chartRefs.reg=new Chart(document.getElementById('chart-regional'),{type:'bar',data:{labels:rl,datasets:[{data:rp,backgroundColor:'#7F77DD',borderRadius:8,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{font:{family:'Montserrat',size:10}}},y:{ticks:{font:{family:'Montserrat',size:10}}}}}});
   // Tendencia
@@ -506,16 +551,16 @@ function renderTabla(key){
   paintTabla(id,key,d.rows,d.headers);
 }
 function paintTabla(id,key,rows,headers){
-  const ccI=getCCIdx(headers);
   const pctI=key==='auto'?8:6;
   const nivI=key==='auto'?9:7;
   let html='<table><thead><tr><th>Fecha/Hora</th><th>Cédula</th><th>Nombre</th><th>Regional</th><th>PDV</th><th>Cadena</th><th>Resultado</th><th>Nivel</th><th>Hace</th><th>Ver</th></tr></thead><tbody>';
   rows.forEach(r=>{
-    const p=pct(r[pctI]);const cc=ccI>=0?r[ccI]:'—';
+    const p=pct(r[pctI]);
+    const cc=getCC(r,headers,key);
     html+=`<tr>
       <td style="font-size:10px;white-space:nowrap">${fmtTS(r[0])}</td>
       <td style="font-weight:700">${cc||'—'}</td>
-      <td><span style="font-weight:600;color:#534AB7;cursor:pointer" onclick="verPerfilCC('${String(cc||r[1]).replace(/'/g,"\\'")}','${String(r[1]).replace(/'/g,"\\'")}')"> ${r[1]||'—'}</span></td>
+      <td><span style="font-weight:600;color:#534AB7;cursor:pointer" onclick="verPerfilCC('${(cc||String(r[1])).replace(/'/g,"\\'")}','${String(r[1]).replace(/'/g,"\\'")}')"> ${r[1]||'—'}</span></td>
       <td>${r[2]||'—'}</td>
       <td style="font-size:10px">${r[3]||'—'}</td>
       <td style="font-size:10px">${r[4]||'—'}</td>
@@ -556,8 +601,7 @@ function renderHistorial(){
 
   const filas=[];
   const add=(rows,headers,tk,tl,col,pctI,nivI)=>{
-    const ccI=getCCIdx(headers);
-    rows.forEach(r=>{filas.push({tipo:tl,col,tk,cc:ccI>=0?String(r[ccI]):'',nombre:String(r[1]||''),regional:String(r[2]||''),pdv:String(r[3]||''),cadena:String(r[4]||''),ts:r[0],pctVal:pct(r[pctI]),nivel:String(r[nivI]||''),r,idx:allData[tk].rows.indexOf(r)});});
+    rows.forEach(r=>{filas.push({tipo:tl,col,tk,cc:getCC(r,headers,tk),nombre:String(r[1]||''),regional:String(r[2]||''),pdv:String(r[3]||''),cadena:String(r[4]||''),ts:r[0],pctVal:pct(r[pctI]),nivel:String(r[nivI]||''),r,idx:allData[tk].rows.indexOf(r)});});
   };
   if(!tipo||tipo==='auto')add(allData.auto.rows,allData.auto.headers,'auto','Autoevaluación','#534AB7',8,9);
   if(!tipo||tipo==='conv')add(allData.conv.rows,allData.conv.headers,'conv','Eval. CONVERTIR','#854F0B',6,7);
@@ -600,14 +644,13 @@ function verPerfilCC(cc,nombre){
   document.getElementById('f-prom-q').value=cc;
   renderHistorial();
 
-  const match=(r,headers)=>{
-    const ccI=getCCIdx(headers);
-    const rcc=ccI>=0?String(r[ccI]):'';
-    return rcc===cc||String(r[1])===nombre||(cc&&rcc.includes(cc));
+  const match=(r,headers,tk)=>{
+    const rcc=getCC(r,headers,tk);
+    return rcc===cc||String(r[1])===nombre||(cc&&rcc===cc);
   };
-  const aR=allData.auto.rows.filter(r=>match(r,allData.auto.headers));
-  const cR=allData.conv.rows.filter(r=>match(r,allData.conv.headers));
-  const vR=allData.vent.rows.filter(r=>match(r,allData.vent.headers));
+  const aR=allData.auto.rows.filter(r=>match(r,allData.auto.headers,'auto'));
+  const cR=allData.conv.rows.filter(r=>match(r,allData.conv.headers,'conv'));
+  const vR=allData.vent.rows.filter(r=>match(r,allData.vent.headers,'vent'));
   const all=[...aR,...cR,...vR];
   if(!all.length){document.getElementById('promotor-detail').style.display='none';return;}
 
@@ -672,9 +715,9 @@ function verDetalle(key,idx){
   const d=allData[key];if(!d||!d.rows[idx])return;
   const row=d.rows[idx];const h=d.headers||[];
   const tl=key==='auto'?'Autoevaluación':key==='conv'?'Eval. CONVERTIR':'Eval. Ventas';
-  const ccI=getCCIdx(h);
+  const ccVal=getCC(row,h,key);
   let html=`<div style="font-size:15px;font-weight:800;color:#26215C;margin-bottom:4px">${tl}</div>`;
-  html+=`<div style="font-size:11px;color:#888;margin-bottom:12px">${row[1]||'—'} · CC: ${ccI>=0?row[ccI]:'—'} · ${fmtTS(row[0])}</div>`;
+  html+=`<div style="font-size:11px;color:#888;margin-bottom:12px">${row[1]||'—'} · CC: ${ccVal||'—'} · ${fmtTS(row[0])}</div>`;
   html+='<div class="table-wrap"><table style="min-width:0"><thead><tr><th>Campo</th><th>Valor</th></tr></thead><tbody>';
   row.forEach((v,i)=>{
     if(v===''||v===null||v===undefined)return;
@@ -808,6 +851,78 @@ function renderUsers(){
     </div>`;
   });
   document.getElementById('users-list').innerHTML=html||'<div class="empty">Sin usuarios.</div>';
+}
+
+// ── ADMIN PANEL ──
+function renderAdminPanel(){
+  // 1. Últimos accesos — guardados en localStorage por login()
+  const logins=JSON.parse(localStorage.getItem('convertir_logins')||'[]');
+  const loginsEl=document.getElementById('admin-last-logins');
+  if(logins.length){
+    let html='<table style="font-size:11px;min-width:0"><thead><tr><th>Coordinador</th><th>Regional</th><th>Último acceso</th><th>Hace</th></tr></thead><tbody>';
+    logins.slice().reverse().slice(0,10).forEach(l=>{
+      html+=`<tr><td style="font-weight:600">${l.name}</td><td>${l.regional}</td><td style="font-size:10px;white-space:nowrap">${fmtTS(l.ts)}</td><td style="font-size:10px;color:#888">${hace(l.ts)}</td></tr>`;
+    });
+    loginsEl.innerHTML=html+'</tbody></table>';
+  } else {
+    loginsEl.innerHTML='<div class="empty">Sin registros de acceso aún.<br><span style="font-size:10px;color:#bbb">Se registran cuando los coordinadores inician sesión.</span></div>';
+  }
+
+  // 2. Indicadores por regional
+  const regionales=['Antioquia','Centro','Eje Cafetero','Norte','Occidente','Oriente'];
+  const indEl=document.getElementById('admin-indicadores');
+  let indHtml='';
+  regionales.forEach(reg=>{
+    const aR=allData.auto.rows.filter(r=>r[2]===reg);
+    const cR=allData.conv.rows.filter(r=>r[2]===reg);
+    const vR=allData.vent.rows.filter(r=>r[2]===reg);
+    const total=aR.length+cR.length+vR.length;
+    if(total===0)return;
+    const vals=[...aR.map(r=>pct(r[8])),...cR.map(r=>pct(r[6])),...vR.map(r=>pct(r[6]))].filter(v=>v>0);
+    const prom=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;
+    const col=prom>=80?'#0F6E56':prom>=60?'#534AB7':prom>=40?'#854F0B':'#A32D2D';
+    indHtml+=`<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+        <span style="font-size:11px;font-weight:600;color:#26215C">${reg}</span>
+        <span style="font-size:11px;font-weight:700;color:${col}">${prom}% <span style="font-weight:400;color:#999;font-size:10px">(${total} eval.)</span></span>
+      </div>
+      <div style="background:#f0eff8;border-radius:99px;height:7px;overflow:hidden">
+        <div style="width:${Math.min(prom,100)}%;height:100%;background:${col};border-radius:99px;transition:width .4s"></div>
+      </div>
+    </div>`;
+  });
+  indEl.innerHTML=indHtml||'<div class="empty">Sin datos por regional.</div>';
+
+  // 3. Tabla de cobertura
+  const cobEl=document.getElementById('admin-cobertura');
+  let cobHtml='<table style="font-size:11px"><thead><tr><th>Regional</th><th>Autoevals.</th><th>Prom. Auto</th><th>CONVERTIR</th><th>Prom. Conv</th><th>Ventas</th><th>Prom. Ventas</th><th>Total eval.</th><th>Prom. general</th></tr></thead><tbody>';
+  const avg=(rows,idx)=>{const v=rows.map(r=>pct(r[idx])).filter(x=>x>0);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):0;};
+  let totAuto=0,totConv=0,totVent=0;
+  regionales.forEach(reg=>{
+    const aR=allData.auto.rows.filter(r=>r[2]===reg);
+    const cR=allData.conv.rows.filter(r=>r[2]===reg);
+    const vR=allData.vent.rows.filter(r=>r[2]===reg);
+    const total=aR.length+cR.length+vR.length;
+    if(total===0)return;
+    totAuto+=aR.length;totConv+=cR.length;totVent+=vR.length;
+    const pA=avg(aR,8),pC=avg(cR,6),pV=avg(vR,6);
+    const vals=[...aR.map(r=>pct(r[8])),...cR.map(r=>pct(r[6])),...vR.map(r=>pct(r[6]))].filter(v=>v>0);
+    const pG=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;
+    const col=pG>=80?'#0F6E56':pG>=60?'#534AB7':pG>=40?'#854F0B':'#A32D2D';
+    cobHtml+=`<tr>
+      <td style="font-weight:700">${reg}</td>
+      <td style="text-align:center">${aR.length}</td>
+      <td style="text-align:center;color:#534AB7;font-weight:600">${pA?pA+'%':'—'}</td>
+      <td style="text-align:center">${cR.length}</td>
+      <td style="text-align:center;color:#854F0B;font-weight:600">${pC?pC+'%':'—'}</td>
+      <td style="text-align:center">${vR.length}</td>
+      <td style="text-align:center;color:#0F6E56;font-weight:600">${pV?pV+'%':'—'}</td>
+      <td style="text-align:center;font-weight:700">${total}</td>
+      <td style="text-align:center;font-weight:700;color:${col}">${pG?pG+'%':'—'}</td>
+    </tr>`;
+  });
+  cobHtml+=`<tr style="background:#f5f4fe;font-weight:700"><td>TOTAL</td><td style="text-align:center">${totAuto}</td><td></td><td style="text-align:center">${totConv}</td><td></td><td style="text-align:center">${totVent}</td><td></td><td style="text-align:center">${totAuto+totConv+totVent}</td><td></td></tr>`;
+  cobEl.innerHTML=cobHtml+'</tbody></table>';
 }
 
 // ── NAVIGATION ──
