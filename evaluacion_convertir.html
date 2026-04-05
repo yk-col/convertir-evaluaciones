@@ -1,0 +1,430 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1rem 0;font-family:var(--font-sans,system-ui);font-size:14px;color:var(--color-text-primary,#1a1a1a)}
+.header{background:#854F0B;border-radius:12px;padding:16px;margin-bottom:1rem}
+.header h2{color:#FAEEDA;font-size:15px;font-weight:500;margin-bottom:4px}
+.header p{color:#EF9F27;font-size:12px}
+.datos-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.dato label{font-size:12px;color:var(--color-text-secondary,#666);display:block;margin-bottom:4px}
+.dato input{width:100%;padding:8px 10px;border:0.5px solid var(--color-border-secondary,#ccc);border-radius:8px;font-size:13px;background:var(--color-background-primary,#fff);color:var(--color-text-primary,#1a1a1a)}
+.pdv-wrap{margin-bottom:1rem}
+.pdv-wrap label{font-size:12px;color:var(--color-text-secondary,#666);display:block;margin-bottom:4px}
+.pdv-wrap input{width:100%;padding:8px 10px;border:0.5px solid var(--color-border-secondary,#ccc);border-radius:8px;font-size:13px;background:var(--color-background-primary,#fff);color:var(--color-text-primary,#1a1a1a)}
+.inst{font-size:12px;color:var(--color-text-secondary,#666);padding:10px 14px;border-left:3px solid #854F0B;background:var(--color-background-secondary,#f5f5f5);margin-bottom:1rem;line-height:1.6}
+.bloque{border:0.5px solid var(--color-border-tertiary,#e0e0e0);border-radius:12px;overflow:hidden;margin-bottom:1.25rem}
+.bk-hdr{padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary,#e0e0e0)}
+.bk-badge{font-size:10px;font-weight:500;padding:2px 9px;border-radius:99px;display:inline-block;margin-bottom:3px}
+.bk-title{font-size:13px;font-weight:500}
+.bk1 .bk-hdr{background:#F5F4FE} .bk1 .bk-badge{background:#EEEDFE;color:#3C3489} .bk1 .bk-title{color:#26215C}
+.bk2 .bk-hdr{background:#EBF8F3} .bk2 .bk-badge{background:#E1F5EE;color:#085041} .bk2 .bk-title{color:#04342C}
+.bk3 .bk-hdr{background:#FDF5E8} .bk3 .bk-badge{background:#FAEEDA;color:#633806} .bk3 .bk-title{color:#412402}
+.bk4 .bk-hdr{background:#FDF2EE} .bk4 .bk-badge{background:#FAECE7;color:#712B13} .bk4 .bk-title{color:#4A1B0C}
+.preg{padding:12px 14px;border-bottom:0.5px solid var(--color-border-tertiary,#e0e0e0)}
+.preg:last-child{border-bottom:none}
+.p-num{font-size:10px;color:var(--color-text-tertiary,#999);margin-bottom:4px}
+.p-caso{background:var(--color-background-secondary,#f5f5f5);border-left:3px solid #854F0B;padding:8px 10px;border-radius:0 6px 6px 0;font-size:12px;color:var(--color-text-secondary,#555);line-height:1.5;margin-bottom:8px}
+.p-text{font-size:13px;line-height:1.5;margin-bottom:10px;color:var(--color-text-primary,#1a1a1a);font-weight:500}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border:0.5px solid var(--color-border-tertiary,#ddd);border-radius:8px;cursor:pointer;font-size:12px;line-height:1.4;color:var(--color-text-primary,#1a1a1a)}
+.opt:hover{background:var(--color-background-secondary,#f5f5f5)}
+.opt input[type=radio]{margin-top:2px;accent-color:#854F0B;flex-shrink:0}
+.opt.correcta{background:#EBF8F3;border-color:#0F6E56;color:#04342C}
+.opt.incorrecta{background:#FCEBEB;border-color:#A32D2D;color:#501313}
+.exp-box{font-size:11px;color:var(--color-text-secondary,#666);font-style:italic;margin-top:6px;padding:6px 8px;background:var(--color-background-secondary,#f5f5f5);border-radius:6px;line-height:1.5;display:none}
+.btn-eval{width:100%;padding:12px;background:#854F0B;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;margin-top:1rem}
+.resultado{border:0.5px solid var(--color-border-tertiary,#e0e0e0);border-radius:12px;padding:16px;margin-top:1rem;display:none}
+.final-card{border:1.5px solid #854F0B;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;background:var(--color-background-secondary,#f5f5f5)}
+.fc-lbl{font-size:12px;color:var(--color-text-secondary,#666);margin-bottom:4px}
+.fc-score{font-size:42px;font-weight:500;color:#854F0B}
+.fc-badge{display:inline-block;padding:4px 14px;border-radius:99px;font-size:13px;font-weight:500;margin:6px 0}
+.fc-desc{font-size:12px;color:var(--color-text-secondary,#666);line-height:1.5;margin-top:6px}
+.stats4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.sc{background:var(--color-background-secondary,#f5f5f5);border-radius:8px;padding:10px;text-align:center}
+.sc-val{font-size:20px;font-weight:500}
+.sc-lbl{font-size:11px;color:var(--color-text-secondary,#666);margin-top:2px}
+.sheets-box{background:var(--color-background-secondary,#f5f5f5);border:0.5px solid var(--color-border-tertiary,#e0e0e0);border-radius:8px;padding:12px;margin-top:12px;font-size:12px;color:var(--color-text-secondary,#666);line-height:1.6}
+.btn-sheet{margin-top:8px;padding:7px 14px;background:#0F6E56;color:#fff;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:none}
+</style>
+
+<div class="wrap">
+  <div class="header">
+    <h2>Evaluación del Modelo CONVERTIR</h2>
+    <p>Spectrum Brands · EFICACIA S.A.S. · 20 preguntas · Conocimiento y aplicación práctica</p>
+  </div>
+
+  <div class="datos-grid">
+    <div class="dato"><label>Nombre completo</label><input type="text" id="nombre" placeholder="Tu nombre completo"></div>
+    <div class="dato"><label>Fecha</label><input type="date" id="fecha"></div>
+  </div>
+  <div class="pdv-wrap">
+    <label>Punto de venta</label>
+    <input type="text" id="pdv" placeholder="Nombre de la tienda / cadena">
+  </div>
+
+  <div class="inst">Lee cada pregunta y caso con atención. Elige la respuesta que mejor describe lo que harías en esa situación real. Al finalizar verás tu resultado, retroalimentación por pregunta y tu nivel en el modelo.</div>
+
+  <!-- BLOQUE 1 -->
+  <div class="bloque bk1">
+    <div class="bk-hdr">
+      <span class="bk-badge">Bloque 1</span>
+      <div class="bk-title">Fundamentos del modelo y proceso consultivo</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 1</div>
+      <div class="p-text">Un promotor con 3 años de experiencia y resultados sólidos recibe el Modelo CONVERTIR. ¿Cuál es la actitud más productiva?</div>
+      <div class="opts">
+        <label class="opt" id="o1-0"><input type="radio" name="p1" value="0"> Adoptarlo completamente porque sustituye todo lo que hacía antes.</label>
+        <label class="opt" id="o1-1"><input type="radio" name="p1" value="1"> Evaluar en qué etapas su proceso actual ya coincide con el modelo y en cuáles necesita ajustar.</label>
+        <label class="opt" id="o1-2"><input type="radio" name="p1" value="2"> Seguir con su método porque ya le funciona.</label>
+        <label class="opt" id="o1-3"><input type="radio" name="p1" value="3"> Aplicarlo solo con clientes nuevos y mantener su método con clientes frecuentes.</label>
+      </div>
+      <div class="exp-box" id="exp1">El modelo CONVERTIR no reemplaza la experiencia: la estructura y amplifica. El promotor efectivo identifica dónde ya lo aplica de forma intuitiva y dónde puede mejorar.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 2</div>
+      <div class="p-text">¿Cuál de las siguientes situaciones describe mejor una aplicación exitosa del modelo?</div>
+      <div class="opts">
+        <label class="opt" id="o2-0"><input type="radio" name="p2" value="0"> El cliente compró el producto más caro del portafolio.</label>
+        <label class="opt" id="o2-1"><input type="radio" name="p2" value="1"> El cliente tomó una decisión informada y salió satisfecho, aunque no compró nada ese día.</label>
+        <label class="opt" id="o2-2"><input type="radio" name="p2" value="2"> El promotor ejecutó las 9 etapas en exactamente 8 minutos.</label>
+        <label class="opt" id="o2-3"><input type="radio" name="p2" value="3"> El promotor cerró la venta antes de que el cliente hiciera preguntas.</label>
+      </div>
+      <div class="exp-box" id="exp2">El modelo mide calidad de la asesoría, no velocidad del cierre. Un cliente que no compra hoy pero confía en el asesor vuelve — eso también es éxito consultivo.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 3</div>
+      <div class="p-text">¿Cuándo es correcto pasar directamente a presentar un producto sin completar la etapa de Necesidad?</div>
+      <div class="opts">
+        <label class="opt" id="o3-0"><input type="radio" name="p3" value="0"> Cuando el cliente ya dice qué producto quiere.</label>
+        <label class="opt" id="o3-1"><input type="radio" name="p3" value="1"> Cuando hay mucha gente en la tienda y no hay tiempo.</label>
+        <label class="opt" id="o3-2"><input type="radio" name="p3" value="2"> Nunca: incluso si el cliente menciona un producto específico, la etapa de Necesidad confirma si ese producto realmente responde a su necesidad real.</label>
+        <label class="opt" id="o3-3"><input type="radio" name="p3" value="3"> Cuando el producto es de bajo precio y la decisión es simple.</label>
+      </div>
+      <div class="exp-box" id="exp3">La etapa N no es opcional aunque el cliente llegue con una referencia clara. Un cliente que pide "la plancha X" puede estar equivocado sobre cuál modelo es el adecuado para su tipo de cabello.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 4</div>
+      <div class="p-text">Después de una asesoría completa el cliente dice "Muchas gracias, esto fue muy útil" y se va sin comprar. ¿Cómo evalúas esta interacción?</div>
+      <div class="opts">
+        <label class="opt" id="o4-0"><input type="radio" name="p4" value="0"> Fue una interacción fallida porque no hubo venta.</label>
+        <label class="opt" id="o4-1"><input type="radio" name="p4" value="1"> Fue exitosa solo si el cliente prometió volver.</label>
+        <label class="opt" id="o4-2"><input type="radio" name="p4" value="2"> Depende: si el cliente se fue genuinamente satisfecho con información útil, fue una interacción de alto valor. Si sentiste que faltó algo en la asesoría, hay algo que revisar.</label>
+        <label class="opt" id="o4-3"><input type="radio" name="p4" value="3"> Siempre es un fracaso si no hay cierre.</label>
+      </div>
+      <div class="exp-box" id="exp4">El modelo mide calidad de la asesoría, no solo resultados de venta. Un cliente bien atendido tiene mayor probabilidad de volver y de recomendar al promotor que lo asesoró.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 5</div>
+      <div class="p-texto p-text">Es fin de mes, estás a dos ventas de cumplir tu meta y el cliente frente a ti está indeciso entre comprar hoy o esperar. ¿Qué haces?</div>
+      <div class="opts">
+        <label class="opt" id="o5-0"><input type="radio" name="p5" value="0"> Le dices que hay una promoción que termina hoy para crear urgencia, aunque no sea cierto.</label>
+        <label class="opt" id="o5-1"><input type="radio" name="p5" value="1"> Presionas el cierre con más argumentos técnicos adicionales.</label>
+        <label class="opt" id="o5-2"><input type="radio" name="p5" value="2"> Exploras genuinamente qué lo hace dudar, respondes esa duda concreta, y si la decisión real del cliente es esperar, la respetas.</label>
+        <label class="opt" id="o5-3"><input type="radio" name="p5" value="3"> Le ofreces un descuento no autorizado para cerrar.</label>
+      </div>
+      <div class="exp-box" id="exp5">La presión de la meta no justifica manipular al cliente. Un cierre forzado genera devoluciones, mala reputación y pérdida de confianza a largo plazo.</div>
+    </div>
+  </div>
+
+  <!-- BLOQUE 2 -->
+  <div class="bloque bk2">
+    <div class="bk-hdr">
+      <span class="bk-badge">Bloque 2</span>
+      <div class="bk-title">Diagnóstico de necesidades y vinculación</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 6</div>
+      <div class="p-caso">Un cliente llega y dice: "Vengo a ver las planchas de esa marca" y señala directamente un modelo que vio en publicidad.</div>
+      <div class="p-text">¿Cuál es la primera acción consultiva?</div>
+      <div class="opts">
+        <label class="opt" id="o6-0"><input type="radio" name="p6" value="0"> Mostrarle el modelo que pidió y explicar sus características.</label>
+        <label class="opt" id="o6-1"><input type="radio" name="p6" value="1"> Decirle que ese modelo no es el mejor y mostrarle otro.</label>
+        <label class="opt" id="o6-2"><input type="radio" name="p6" value="2"> Antes de mostrarle nada, explorar para qué tipo de cabello lo necesita y con qué frecuencia lo usaría, para confirmar si ese modelo es adecuado para su caso.</label>
+        <label class="opt" id="o6-3"><input type="radio" name="p6" value="3"> Mostrarle todos los modelos disponibles para que compare.</label>
+      </div>
+      <div class="exp-box" id="exp6">La etapa Necesidad ocurre antes de Explicar. Que el cliente llegue con una referencia no significa que sea la indicada — un asesor consultivo valida antes de confirmar.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 7</div>
+      <div class="p-caso">Un cliente lleva 10 minutos mirando aspiradoras sin tocar ninguna. Cuando te acercas, dice "solo estoy mirando".</div>
+      <div class="p-text">¿Cómo avanzas sin invadir al cliente?</div>
+      <div class="opts">
+        <label class="opt" id="o7-0"><input type="radio" name="p7" value="0"> "Claro, si necesita algo me dice" y te alejas.</label>
+        <label class="opt" id="o7-1"><input type="radio" name="p7" value="1"> Describes el producto más vendido para generar interés.</label>
+        <label class="opt" id="o7-2"><input type="radio" name="p7" value="2"> "¿Está buscando algo para un uso específico o comparando opciones? Solo para orientarlo si lo necesita." (tono ligero, sin presión)</label>
+        <label class="opt" id="o7-3"><input type="radio" name="p7" value="3"> Le preguntas directamente cuánto tiene pensado gastar.</label>
+      </div>
+      <div class="exp-box" id="exp7">La etapa Observar detectó que el cliente está en exploración, no en decisión. La pregunta correcta abre la conversación sin forzarla — respeta el ritmo del cliente.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 8</div>
+      <div class="p-caso">Un cliente dice que quiere una freidora de aire "para comer más sano". Al explorar, descubres que vive solo, cocina máximo 3 veces por semana y tiene cocina pequeña.</div>
+      <div class="p-text">¿Qué modelo le recomiendas?</div>
+      <div class="opts">
+        <label class="opt" id="o8-0"><input type="radio" name="p8" value="0"> El más grande porque tiene más capacidad y durará más.</label>
+        <label class="opt" id="o8-1"><input type="radio" name="p8" value="1"> El de mayor potencia porque cocina más rápido.</label>
+        <label class="opt" id="o8-2"><input type="radio" name="p8" value="2"> El modelo compacto de capacidad mediana, porque se ajusta a su frecuencia de uso y espacio disponible, aunque no sea el más vendido.</label>
+        <label class="opt" id="o8-3"><input type="radio" name="p8" value="3"> El que tenga mejor margen de ganancia esta semana.</label>
+      </div>
+      <div class="exp-box" id="exp8">La etapa Vincular conecta la necesidad real del cliente con la solución real — no la más cara ni la más vendida, sino la más adecuada a su contexto específico.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 9</div>
+      <div class="p-caso">Una pareja llega a comprar una licuadora. Uno quiere la más cara, el otro la más barata. Empiezan a discutir frente a ti.</div>
+      <div class="p-text">¿Cómo aplicas el proceso consultivo en esta situación?</div>
+      <div class="opts">
+        <label class="opt" id="o9-0"><input type="radio" name="p9" value="0"> Te retiras para darles espacio de decidir solos.</label>
+        <label class="opt" id="o9-1"><input type="radio" name="p9" value="1"> Le hablas solo al que quiere la más cara porque es más probable que cierre la venta.</label>
+        <label class="opt" id="o9-2"><input type="radio" name="p9" value="2"> Escuchas a los dos, identificas los criterios de cada uno (funcionalidad vs. precio), y propones una opción intermedia que satisfaga ambas prioridades con argumentos concretos para cada uno.</label>
+        <label class="opt" id="o9-3"><input type="radio" name="p9" value="3"> Les preguntas que decidan y te avisan.</label>
+      </div>
+      <div class="exp-box" id="exp9">En la etapa Necesidad hay dos clientes con dos necesidades. El asesor consultivo no elige un bando — identifica el punto de acuerdo real y lo convierte en la recomendación.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 10</div>
+      <div class="p-caso">Un cliente muy seguro de sí mismo te interrumpe cada vez que hablas y dice que ya sabe todo sobre el producto.</div>
+      <div class="p-text">¿Cómo avanzas en la asesoría?</div>
+      <div class="opts">
+        <label class="opt" id="o10-0"><input type="radio" name="p10" value="0"> Le dejas hablar todo lo que quiera y no intervienes.</label>
+        <label class="opt" id="o10-1"><input type="radio" name="p10" value="1"> Lo contradices para demostrar que tú también sabes.</label>
+        <label class="opt" id="o10-2"><input type="radio" name="p10" value="2"> Reconoces su conocimiento genuinamente, haces preguntas que solo él puede responder sobre su situación específica de uso, y posicionas tu valor como alguien que conoce el producto en contextos como el suyo.</label>
+        <label class="opt" id="o10-3"><input type="radio" name="p10" value="3"> Pasas directamente al cierre porque ya sabe lo que quiere.</label>
+      </div>
+      <div class="exp-box" id="exp10">La etapa Observar identifica que este cliente necesita ser respetado como experto. El asesor consultivo no compite con su conocimiento — lo usa como puente para llegar a la etapa Necesidad.</div>
+    </div>
+  </div>
+
+  <!-- BLOQUE 3 -->
+  <div class="bloque bk3">
+    <div class="bk-hdr">
+      <span class="bk-badge">Bloque 3</span>
+      <div class="bk-title">Manejo de objeciones y situaciones complejas</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 11</div>
+      <div class="p-caso">Un cliente tiene el producto en la mano y está a punto de llevárselo. De repente dice: "Espera, ¿y si lo encuentro más barato en línea?"</div>
+      <div class="p-text">¿Cuál es la respuesta que mantiene el cierre sin presionar?</div>
+      <div class="opts">
+        <label class="opt" id="o11-0"><input type="radio" name="p11" value="0"> "Si lo encuentra más barato en línea, puede comprarlo allá."</label>
+        <label class="opt" id="o11-1"><input type="radio" name="p11" value="1"> Bajas el precio inmediatamente para que no busque.</label>
+        <label class="opt" id="o11-2"><input type="radio" name="p11" value="2"> "Es posible encontrarlo en línea, pero aquí tiene garantía inmediata, soporte local y lo lleva hoy. ¿Qué le da más tranquilidad para su compra?" (y lo dejas responder)</label>
+        <label class="opt" id="o11-3"><input type="radio" name="p11" value="3"> Le dices que en línea venden productos falsificados.</label>
+      </div>
+      <div class="exp-box" id="exp11">Reconoces la posibilidad, refuerzas el valor diferencial real y devuelves la decisión al cliente sin presión. El cliente que decide por convicción no devuelve el producto.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 12</div>
+      <div class="p-caso">Un cliente técnico te pregunta la eficiencia energética exacta de una aspiradora en kWh por hora de uso. No tienes ese dato en memoria.</div>
+      <div class="p-text">¿Qué haces?</div>
+      <div class="opts">
+        <label class="opt" id="o12-0"><input type="radio" name="p12" value="0"> Das un número aproximado para no perder credibilidad.</label>
+        <label class="opt" id="o12-1"><input type="radio" name="p12" value="1"> Le dices que ese dato no es importante para el uso cotidiano.</label>
+        <label class="opt" id="o12-2"><input type="radio" name="p12" value="2"> Reconoces que no tienes ese dato exacto, le ofreces buscarlo en la ficha técnica, y mientras tanto exploras qué uso específico lo llevó a preguntar eso.</label>
+        <label class="opt" id="o12-3"><input type="radio" name="p12" value="3"> Le dices que el producto tiene garantía de eficiencia y cambias el tema.</label>
+      </div>
+      <div class="exp-box" id="exp12">La honestidad construye más confianza que una respuesta inventada. Reconocer el límite del conocimiento y ofrecer una solución concreta es lo que diferencia al asesor consultivo.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 13</div>
+      <div class="p-caso">Un cliente se queja de que el producto que compró la semana pasada "no sirvió". Llega molesto y quiere devolverlo.</div>
+      <div class="p-text">¿Cómo gestionas esta situación?</div>
+      <div class="opts">
+        <label class="opt" id="o13-0"><input type="radio" name="p13" value="0"> Le dices que las devoluciones las maneja caja y lo diriges allá inmediatamente.</label>
+        <label class="opt" id="o13-1"><input type="radio" name="p13" value="1"> Escuchas completo lo que ocurrió, validas su molestia, exploras si fue un problema del producto o del uso, y le ofreces una solución concreta.</label>
+        <label class="opt" id="o13-2"><input type="radio" name="p13" value="2"> Le explicas que el producto sí funciona y que probablemente lo usó mal.</label>
+        <label class="opt" id="o13-3"><input type="radio" name="p13" value="3"> Le ofreces un descuento en su próxima compra para compensar.</label>
+      </div>
+      <div class="exp-box" id="exp13">La etapa Recordar incluye el servicio postventa. Un promotor consultivo no "pasa el problema" — lo acompaña hasta que el cliente tenga una solución real.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 14</div>
+      <div class="p-caso">Un cliente tiene una objeción válida que realmente no puedes resolver: el producto no tiene la función específica que él busca.</div>
+      <div class="p-text">¿Qué haces?</div>
+      <div class="opts">
+        <label class="opt" id="o14-0"><input type="radio" name="p14" value="0"> Minimizas la importancia de esa función para que siga adelante con la compra.</label>
+        <label class="opt" id="o14-1"><input type="radio" name="p14" value="1"> Lo reconoces honestamente, exploras si hay otra función del producto que igualmente resuelva su necesidad, y si no la hay, le orientas hacia una alternativa mejor aunque no sea del portafolio.</label>
+        <label class="opt" id="o14-2"><input type="radio" name="p14" value="2"> Le dices que esa función no es tan necesaria para el uso que describió.</label>
+        <label class="opt" id="o14-3"><input type="radio" name="p14" value="3"> Cambias de tema y empiezas a hablar de otro producto sin reconocer la objeción.</label>
+      </div>
+      <div class="exp-box" id="exp14">El modelo CONVERTIR se basa en generar confianza genuina. Un promotor que reconoce los límites de su portafolio y orienta honestamente construye credibilidad de largo plazo.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 15</div>
+      <div class="p-caso">Un cliente lleva 20 minutos contigo, está interesado, pero sigue pidiendo más información antes de decidir. Ya le explicaste todo lo que necesita saber.</div>
+      <div class="p-text">¿Qué significa esto y cómo actúas?</div>
+      <div class="opts">
+        <label class="opt" id="o15-0"><input type="radio" name="p15" value="0"> El cliente no quiere comprar — es mejor dejarlo ir.</label>
+        <label class="opt" id="o15-1"><input type="radio" name="p15" value="1"> El cliente tiene una objeción que no está verbalizando. Exploras con una pregunta directa: "Parece que hay algo que le genera duda todavía, ¿qué sería?"</label>
+        <label class="opt" id="o15-2"><input type="radio" name="p15" value="2"> El cliente necesita más información técnica — continúas explicando.</label>
+        <label class="opt" id="o15-3"><input type="radio" name="p15" value="3"> Cierras directamente para no perder más tiempo.</label>
+      </div>
+      <div class="exp-box" id="exp15">Cuando un cliente sigue pidiendo información después de tener todo claro, la objeción real es otra — miedo, precio no dicho, comparación pendiente. El promotor consultivo lo detecta y lo nombra.</div>
+    </div>
+  </div>
+
+  <!-- BLOQUE 4 -->
+  <div class="bloque bk4">
+    <div class="bk-hdr">
+      <span class="bk-badge">Bloque 4</span>
+      <div class="bk-title">Cierre, postventa y aplicación avanzada</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 16</div>
+      <div class="p-caso">Un cliente compra una freidora de aire. Justo cuando va a pagar, recuerdas que hay accesorios compatibles disponibles.</div>
+      <div class="p-text">¿Cómo ofreces el accesorio de forma consultiva?</div>
+      <div class="opts">
+        <label class="opt" id="o16-0"><input type="radio" name="p16" value="0"> Le muestras todos los accesorios disponibles para que elija.</label>
+        <label class="opt" id="o16-1"><input type="radio" name="p16" value="1"> No dices nada porque ya cerró la venta y no quieres incomodarlo.</label>
+        <label class="opt" id="o16-2"><input type="radio" name="p16" value="2"> "Antes de que se vaya, hay un accesorio que muchos clientes encuentran muy útil con este modelo — ¿le comento en qué le puede servir según lo que me contó de su uso?"</label>
+        <label class="opt" id="o16-3"><input type="radio" name="p16" value="3"> Le dices que sin los accesorios el producto no funciona bien.</label>
+      </div>
+      <div class="exp-box" id="exp16">La venta complementaria consultiva ocurre en la etapa Invitar y solo cuando hay una necesidad real ya identificada. No es una sugerencia genérica — está anclada a lo que el cliente ya te dijo.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 17</div>
+      <div class="p-caso">Llevas 6 minutos con un cliente en la etapa de Necesidad. Llega otro cliente que parece muy decidido a comprar y te mira directamente.</div>
+      <div class="p-text">¿Qué haces?</div>
+      <div class="opts">
+        <label class="opt" id="o17-0"><input type="radio" name="p17" value="0"> Dejas al primer cliente para no perder al que ya viene decidido.</label>
+        <label class="opt" id="o17-1"><input type="radio" name="p17" value="1"> Intentas atender a los dos al mismo tiempo.</label>
+        <label class="opt" id="o17-2"><input type="radio" name="p17" value="2"> Con un gesto o frase breve reconoces al segundo cliente ("en un momento lo atiendo"), terminas bien la etapa con el primero y luego atiendes al segundo con la misma calidad.</label>
+        <label class="opt" id="o17-3"><input type="radio" name="p17" value="3"> Le pides al primer cliente que espere para atender al segundo.</label>
+      </div>
+      <div class="exp-box" id="exp17">El proceso consultivo no se interrumpe. Abandonar la etapa Necesidad del primer cliente rompe la confianza que venías construyendo. Un reconocimiento breve al segundo cliente es suficiente.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 18</div>
+      <div class="p-caso">Un cliente que compró hace dos semanas regresa satisfecho y te agradece la asesoría.</div>
+      <div class="p-text">¿Cómo aprovechas este momento?</div>
+      <div class="opts">
+        <label class="opt" id="o18-0"><input type="radio" name="p18" value="0"> Le agradeces y lo dejas ir — ya cumplió su ciclo.</label>
+        <label class="opt" id="o18-1"><input type="radio" name="p18" value="1"> Le ofreces inmediatamente otro producto para aprovechar que está satisfecho.</label>
+        <label class="opt" id="o18-2"><input type="radio" name="p18" value="2"> Le preguntas qué fue lo que más le sirvió del producto, refuerzas su buena decisión, y de forma natural exploras si hay algo más en lo que puedas orientarlo — sin presión.</label>
+        <label class="opt" id="o18-3"><input type="radio" name="p18" value="3"> Le pides que te recomiende con sus conocidos.</label>
+      </div>
+      <div class="exp-box" id="exp18">La etapa Recordar se activa también en visitas de retorno. Un cliente satisfecho que regresa es la mayor validación del modelo — y el momento ideal para construir una relación de largo plazo.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 19</div>
+      <div class="p-caso">Un cliente dice "lo pienso" justo cuando estaban muy cerca del cierre. Ya exploraste sus necesidades y argumentaste bien.</div>
+      <div class="p-text">¿Qué respuesta es la más consultiva?</div>
+      <div class="opts">
+        <label class="opt" id="o19-0"><input type="radio" name="p19" value="0"> "Claro, tome su tiempo" y lo dejas ir sin más.</label>
+        <label class="opt" id="o19-1"><input type="radio" name="p19" value="1"> "¿Qué es lo que le genera duda? A veces cuando los clientes dicen eso es porque hay algo que no quedó completamente claro."</label>
+        <label class="opt" id="o19-2"><input type="radio" name="p19" value="2"> Haces más énfasis en las promociones disponibles para presionarlo.</label>
+        <label class="opt" id="o19-3"><input type="radio" name="p19" value="3"> "Le garantizo que si lo deja no va a encontrar otro igual."</label>
+      </div>
+      <div class="exp-box" id="exp19">"Lo pienso" casi siempre oculta una objeción no verbalizada. El promotor consultivo la nombra directamente sin presionar, dando al cliente espacio para expresar la duda real.</div>
+    </div>
+
+    <div class="preg">
+      <div class="p-num">Pregunta 20</div>
+      <div class="p-caso">Un cliente compra pero a las dos horas regresa molesto porque el producto "no era lo que esperaba".</div>
+      <div class="p-text">¿Qué falló en el proceso consultivo y cómo lo identificas?</div>
+      <div class="opts">
+        <label class="opt" id="o20-0"><input type="radio" name="p20" value="0"> Falló la etapa Explicar: no se comunicaron bien las características del producto.</label>
+        <label class="opt" id="o20-1"><input type="radio" name="p20" value="1"> Falló la etapa Conectar: no se generó suficiente confianza.</label>
+        <label class="opt" id="o20-2"><input type="radio" name="p20" value="2"> Posiblemente falló la etapa Necesidad: la necesidad real del cliente no fue comprendida correctamente, lo que llevó a recomendar un producto que no se ajustaba a su contexto real.</label>
+        <label class="opt" id="o20-3"><input type="radio" name="p20" value="3"> No falló nada: a veces los clientes cambian de opinión.</label>
+      </div>
+      <div class="exp-box" id="exp20">Cuando un cliente devuelve un producto porque "no era lo que esperaba", casi siempre la causa raíz está en la etapa Necesidad. Si la necesidad real fue diagnosticada bien, la recomendación es adecuada.</div>
+    </div>
+  </div>
+
+  <button class="btn-eval" onclick="evaluar()">Ver mi resultado final</button>
+
+  <div class="resultado" id="resultado">
+    <div class="final-card">
+      <div class="fc-lbl">Promedio final de la evaluación</div>
+      <div class="fc-score" id="fc-score">—</div>
+      <div id="fc-badge-wrap"></div>
+      <div class="fc-desc" id="fc-desc"></div>
+    </div>
+    <div class="stats4">
+      <div class="sc"><div class="sc-val" id="sc-ok" style="color:#0F6E56">—</div><div class="sc-lbl">Correctas</div></div>
+      <div class="sc"><div class="sc-val" id="sc-err" style="color:#A32D2D">—</div><div class="sc-lbl">Incorrectas</div></div>
+      <div class="sc"><div class="sc-val" id="sc-pct">—</div><div class="sc-lbl">Porcentaje</div></div>
+      <div class="sc"><div class="sc-val" id="sc-tot">—</div><div class="sc-lbl">Respondidas</div></div>
+    </div>
+    <div class="sheets-box">
+      <strong>Registro de evaluación</strong><br>
+      Guarda tus resultados en la base de datos del Modelo CONVERTIR.
+      <br><button class="btn-sheet" onclick="enviarSheets()">Guardar mis resultados</button>
+      <div id="sheets-status" style="margin-top:6px;font-size:11px;color:var(--color-text-secondary,#666)"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const correctas={p1:1,p2:1,p3:2,p4:2,p5:2,p6:2,p7:2,p8:2,p9:2,p10:2,p11:2,p12:2,p13:1,p14:1,p15:1,p16:2,p17:2,p18:2,p19:1,p20:2};
+const niveles=[
+  {min:0,max:49,label:'En desarrollo',c:'#A32D2D',bg:'#FCEBEB',desc:'Los fundamentos del modelo necesitan refuerzo. Revisa las etapas del CONVERTIR y practica con los casos prácticos.'},
+  {min:50,max:64,label:'En proceso',c:'#854F0B',bg:'#FAEEDA',desc:'Comprensión parcial del modelo. Hay etapas que necesitas consolidar, especialmente diagnóstico de necesidades y manejo de situaciones complejas.'},
+  {min:65,max:79,label:'Competente',c:'#185FA5',bg:'#E6F1FB',desc:'Buen dominio del modelo. El siguiente paso es aplicarlo con el mismo criterio en todas las situaciones, incluso las más complejas.'},
+  {min:80,max:100,label:'Destacado',c:'#0F6E56',bg:'#E1F5EE',desc:'Dominas el Modelo CONVERTIR. Estás en condiciones de ser referente del equipo y apoyar a promotores con menor experiencia.'}
+];
+let gData={};
+
+function evaluar(){
+  let ok=0,total=0;
+  for(let i=1;i<=20;i++){
+    const sel=document.querySelector(`input[name="p${i}"]:checked`);
+    if(!sel) continue;
+    total++;
+    const v=parseInt(sel.value);
+    const correct=v===correctas['p'+i];
+    if(correct) ok++;
+    for(let j=0;j<=3;j++){
+      const lbl=document.getElementById(`o${i}-${j}`);
+      if(!lbl) continue;
+      if(j===correctas['p'+i]) lbl.classList.add('correcta');
+      else if(j===v&&!correct) lbl.classList.add('incorrecta');
+    }
+    const expEl=document.getElementById('exp'+i);
+    if(expEl) expEl.style.display='block';
+  }
+  const pct=total?Math.round((ok/total)*100):0;
+  document.getElementById('resultado').style.display='block';
+  document.getElementById('fc-score').textContent=pct+'%';
+  document.getElementById('sc-ok').textContent=ok;
+  document.getElementById('sc-err').textContent=total-ok;
+  document.getElementById('sc-pct').textContent=pct+'%';
+  document.getElementById('sc-tot').textContent=total+'/20';
+  const n=niveles.find(x=>pct>=x.min&&pct<=x.max)||niveles[0];
+  document.getElementById('fc-badge-wrap').innerHTML=`<span class="fc-badge" style="background:${n.bg};color:${n.c}">${n.label}</span>`;
+  document.getElementById('fc-desc').textContent=n.desc;
+  gData={nombre:document.getElementById('nombre').value,fecha:document.getElementById('fecha').value,pdv:document.getElementById('pdv').value,pct,nivel:n.label,ok,total,timestamp:new Date().toISOString()};
+  document.getElementById('resultado').scrollIntoView({behavior:'smooth'});
+}
+
+function enviarSheets(){
+  const st=document.getElementById('sheets-status');
+  if(!gData.nombre){st.textContent='Completa tu nombre antes de guardar.';st.style.color='#A32D2D';return;}
+  const SHEET_URL='https://script.google.com/macros/s/TU_SCRIPT_ID_AQUI/exec';
+  const row=[gData.timestamp,gData.nombre,gData.fecha,gData.pdv,gData.pct+'%',gData.nivel,gData.ok,gData.total];
+  st.textContent='Enviando...';st.style.color='#534AB7';
+  fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tipo:'evaluacion',datos:row})})
+  .then(()=>{st.textContent='Guardado correctamente.';st.style.color='#0F6E56';})
+  .catch(()=>{st.textContent='Sin conexión. Anota: '+gData.pct+'% · '+gData.nivel;st.style.color='#854F0B';});
+}
+</script>
