@@ -75,7 +75,7 @@ select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-
 .hexagons-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
 .hex-section{text-align:center}
 .hex-title{font-size:12px;font-weight:500;margin-bottom:8px;color:var(--color-text-secondary,#666)}
-.hex-svg{width:100%;max-width:260px}
+.hex-svg{width:100%;max-width:340px}
 .sheets-box{background:var(--color-background-secondary,#f5f5f5);border:0.5px solid var(--color-border-tertiary,#e0e0e0);border-radius:8px;padding:12px;margin-top:12px;font-size:12px;color:var(--color-text-secondary,#666);line-height:1.6}
 .sheets-box strong{color:var(--color-text-primary,#1a1a1a)}
 .btn-sheet{display:inline-block;margin-top:8px;padding:7px 14px;background:#0F6E56;color:#fff;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:none}
@@ -175,11 +175,11 @@ select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-
     <div class="hexagons-wrap">
       <div class="hex-section">
         <div class="hex-title">Habilidades blandas</div>
-        <svg class="hex-svg" id="hex-b" viewBox="0 0 260 260"></svg>
+        <svg class="hex-svg" id="hex-b" viewBox="0 0 360 360"></svg>
       </div>
       <div class="hex-section">
         <div class="hex-title">Habilidades duras</div>
-        <svg class="hex-svg" id="hex-d" viewBox="0 0 260 260"></svg>
+        <svg class="hex-svg" id="hex-d" viewBox="0 0 360 360"></svg>
       </div>
     </div>
     
@@ -341,17 +341,23 @@ function hexagonPath(cx,cy,r,valores,maxVal,color,labelFn){
   paths+=`<polygon points="${dataPts.map(p=>p.join(',')).join(' ')}" fill="${color}" fill-opacity="0.25" stroke="${color}" stroke-width="1.5"/>`;
   valores.forEach((_,i)=>{
     const a=startAngle+i*angleStep;
-    const lx=cx+(r+18)*Math.cos(a);
-    const ly=cy+(r+18)*Math.sin(a);
+    const lx=cx+(r+32)*Math.cos(a);
+    const ly=cy+(r+32)*Math.sin(a);
     const label=labelFn(i);
     const words=label.split(' ');
     const lines=[];
     let cur='';
-    words.forEach(w=>{if((cur+w).length>10&&cur){lines.push(cur.trim());cur=w+' ';}else{cur+=w+' ';}});
-    if(cur.trim()) lines.push(cur.trim());
-    const textEls=lines.map((l,li)=>`<tspan x="${lx}" dy="${li===0?0:12}">${l}</tspan>`).join('');
-    const anchor=Math.cos(a)>0.1?'start':Math.cos(a)<-0.1?'end':'middle';
-    paths+=`<text x="${lx}" y="${ly-(lines.length-1)*6}" text-anchor="${anchor}" font-size="9" fill="currentColor" opacity="0.7">${textEls}</text>`;
+    words.forEach(w=>{
+      if((cur+' '+w).trim().length>12&&cur){lines.push(cur.trim());cur=w;}
+      else{cur=(cur+' '+w).trim();}
+    });
+    if(cur.trim())lines.push(cur.trim());
+    const lineH=13;
+    const totalH=(lines.length-1)*lineH;
+    const textEls=lines.map((l,li)=>`<tspan x="${lx}" dy="${li===0?-totalH/2:lineH}">${l}</tspan>`).join('');
+    const cosA=Math.cos(a);
+    const anchor=cosA>0.15?'start':cosA<-0.15?'end':'middle';
+    paths+=`<text x="${lx}" y="${ly}" text-anchor="${anchor}" font-size="11" font-family="Montserrat,system-ui,sans-serif" fill="#444" font-weight="500">${textEls}</text>`;
   });
   return paths;
 }
@@ -359,8 +365,7 @@ function hexagonPath(cx,cy,r,valores,maxVal,color,labelFn){
 function dibujarHex(svgId,valores,maxVal,labels,color){
   const svg=document.getElementById(svgId);
   if(!svg) return;
-  const n=labels.length;
-  const cx=130,cy=130,r=88;
+  const cx=180,cy=180,r=110;
   svg.innerHTML=hexagonPath(cx,cy,r,valores,maxVal,color,i=>labels[i]);
 }
 
@@ -543,7 +548,6 @@ function descargarPDF(){
   
   doc.save('Autoevaluacion_'+nombre.replace(/ /g,'_')+'_'+globalData.fecha+'.pdf');
 }
-
 function enviarSheets(){
   const st=document.getElementById('sheets-status-new')||document.getElementById('sheets-status');
   const ahora=new Date();
