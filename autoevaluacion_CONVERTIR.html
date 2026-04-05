@@ -539,7 +539,9 @@ function descargarPDF(){
 
 function enviarSheets(){
   const st=document.getElementById('sheets-status-new')||document.getElementById('sheets-status');
-  const row=[globalData.timestamp,globalData.nombre,globalData.regional||'',globalData.cadena||'',globalData.fecha,globalData.pdv,globalData.pctB+'%',globalData.pctD+'%',globalData.pctTotal+'%',globalData.perfil,globalData.totalResp,globalData.debilesStr||'',...(globalData.scoreB||[]),...(globalData.scoreD||[])];
+  const ahora=new Date();
+  const tsCO=ahora.toLocaleString('es-CO',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).replace(',','');
+  const row=[tsCO,globalData.nombre,globalData.regional||'',globalData.pdv||'',globalData.cadena||'',globalData.fecha,globalData.pctB+'%',globalData.pctD+'%',globalData.pctTotal+'%',globalData.perfil,globalData.totalResp,globalData.debilesStr||'',...(globalData.scoreB||[]),...(globalData.scoreD||[])];
   const SHEET_URL='https://script.google.com/macros/s/AKfycbxVB9q9XnAUN0vSH4v_avsbky2rROE-eVVqq8rj-9BW1hlR_5grfKyRXqBDXS5E8YXH/exec';
   if(st){st.textContent='Guardando...';st.style.color='#534AB7';}
   fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tipo:'autoevaluacion',datos:row})})
