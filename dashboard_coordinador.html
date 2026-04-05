@@ -254,7 +254,7 @@ tr:hover td{background:#fafafe}
 </div><!-- /dash-page -->
 
 <script>
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzafaTQa0tTS4lSG9ZEoerxkbTZwQ0IiImmWCs-L5AryPFr5BwNNFlzD4_ie6chAG3L/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxVB9q9XnAUN0vSH4v_avsbky2rROE-eVVqq8rj-9BW1hlR_5grfKyRXqBDXS5E8YXH/exec';
 
 // User database (stored in localStorage for persistence between sessions)
 function getUsers(){
@@ -373,7 +373,13 @@ function getNivelBadge(nivel){
   return '<span class="badge b-dev">'+n+'</span>';
 }
 
-function getPctNum(v){return parseFloat(String(v).replace('%',''))||0;}
+function getPctNum(v){
+  const n=parseFloat(String(v).replace('%',''));
+  if(isNaN(n))return 0;
+  // Si el valor es menor a 1.5 y mayor a 0, probablemente es decimal (0.95 → 95%)
+  if(n>0 && n<=1.5) return Math.round(n*100);
+  return Math.round(n);
+}
 
 function renderResumen(){
   const allRows=[...allData.auto.rows,...allData.conv.rows,...allData.vent.rows];
@@ -544,39 +550,106 @@ function verPerfilPromotor(nombre){
   if(!allPersonRows.length){document.getElementById('promotor-detail').innerHTML='<div class="empty">Sin evaluaciones registradas para este promotor.</div>';document.getElementById('promotor-detail').style.display='block';return;}
   const reg=allPersonRows[0][2]||'—';
   const initials=nombre.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
-  const lastAuto=autoRows[autoRows.length-1];
-  const pctB=lastAuto?getPctNum(lastAuto[5]):0;
-  const pctD=lastAuto?getPctNum(lastAuto[6]):0;
-  const pctG=lastAuto?getPctNum(lastAuto[7]):0;
-  const lastConv=convRows[convRows.length-1];
-  const pctConv=lastConv?getPctNum(lastConv[5]):0;
-  const lastVent=ventRows[ventRows.length-1];
-  const pctVent=lastVent?getPctNum(lastVent[5]):0;
-  
-  const progressBar=(label,pct,color)=>`<div class="progress-row"><div class="progress-label">${label}</div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%;background:${color}"></div></div><div class="progress-pct" style="color:${color}">${pct}%</div></div>`;
-  
+
+  // Promedios ponderados de TODAS las evaluaciones (no solo la última)
+  const avgOf=(rows,idx)=>{const vals=rows.map(r=>getPctNum(r[idx])).filter(v=>v>0);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;};
+  const pctB=avgOf(autoRows,5);
+  const pctD=avgOf(autoRows,6);
+  const pctG=avgOf(autoRows,7);
+  const pctConv=avgOf(convRows,5);
+  const pctVent=avgOf(ventRows,5);
+  // Ponderado total: promedio de todos los resultados generales disponibles
+  const todosVals=[...autoRows.map(r=>getPctNum(r[7])),...convRows.map(r=>getPctNum(r[5])),...ventRows.map(r=>getPctNum(r[5]))].filter(v=>v>0);
+  const pctTotal=todosVals.length?Math.round(todosVals.reduce((a,b)=>a+b,0)/todosVals.length):0;
+
+  const progressBar=(label,pct,color,sub='')=>`<div class="progress-row"><div class="progress-label">${label}${sub?'<span style="font-size:10px;color:#aaa;font-weight:400"> '+sub+'</span>':''}</div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.min(pct,100)}%;background:${color}"></div></div><div class="progress-pct" style="color:${color}">${pct}%</div></div>`;
+
   let html=`<div class="card">
     <div class="profile-header">
       <div class="profile-avatar">${initials}</div>
-      <div><div class="profile-name">${nombre}</div><div class="profile-meta">Regional: ${reg} · ${allPersonRows.length} evaluaciones totales</div></div>
+      <div>
+        <div class="profile-name">${nombre}</div>
+        <div class="profile-meta">Regional: ${reg} · ${allPersonRows.length} evaluaciones totales</div>
+        <div style="margin-top:6px"><span style="background:#534AB7;color:#fff;font-size:13px;font-weight:700;padding:4px 14px;border-radius:99px">Ponderado total: ${pctTotal}%</span></div>
+      </div>
       <button class="btn-sm btn-amber" style="margin-left:auto" onclick="descargarPerfilPDF('${nombre}')">Descargar perfil PDF</button>
     </div>
     <div style="margin-bottom:16px">
-      ${progressBar('Habilidades blandas',pctB,'#534AB7')}
-      ${progressBar('Habilidades duras',pctD,'#0F6E56')}
-      ${progressBar('Autoevaluación general',pctG,'#7F77DD')}
-      ${progressBar('Evaluación CONVERTIR',pctConv,'#854F0B')}
-      ${progressBar('Evaluación de Ventas',pctVent,'#185FA5')}
+      ${pctB||pctD?progressBar('Habilidades blandas',pctB,'#534AB7',autoRows.length>1?'promedio '+autoRows.length+' eval.':''):''}
+      ${pctD?progressBar('Habilidades duras',pctD,'#0F6E56',autoRows.length>1?'promedio '+autoRows.length+' eval.':''):''}
+      ${pctG?progressBar('Autoevaluación general',pctG,'#7F77DD',autoRows.length>1?'promedio '+autoRows.length+' eval.':''):''}
+      ${pctConv?progressBar('Evaluación CONVERTIR',pctConv,'#854F0B',convRows.length>1?'promedio '+convRows.length+' eval.':''):''}
+      ${pctVent?progressBar('Evaluación de Ventas',pctVent,'#185FA5',ventRows.length>1?'promedio '+ventRows.length+' eval.':''):''}
     </div>
     <div style="font-size:13px;font-weight:700;color:#26215C;margin-bottom:10px">Historial de evaluaciones</div>
-    <table style="font-size:11px"><thead><tr><th>Tipo</th><th>Fecha</th><th>Regional</th><th>Cadena</th><th>Resultado</th><th>Nivel</th></tr></thead><tbody>`;
-  autoRows.forEach(r=>html+=`<tr><td>Autoevaluación</td><td>${r[4]||r[0]?.slice(0,10)}</td><td>${r[2]}</td><td>${r[3]||'—'}</td><td>${r[7]}</td><td>${getNivelBadge(r[8])}</td></tr>`);
-  convRows.forEach(r=>html+=`<tr><td>CONVERTIR</td><td>${r[4]||r[0]?.slice(0,10)}</td><td>${r[2]}</td><td>${r[3]||'—'}</td><td>${r[5]}</td><td>${getNivelBadge(r[6])}</td></tr>`);
-  ventRows.forEach(r=>html+=`<tr><td>Ventas</td><td>${r[4]||r[0]?.slice(0,10)}</td><td>${r[2]}</td><td>${r[3]||'—'}</td><td>${r[5]}</td><td>${getNivelBadge(r[6])}</td></tr>`);
+    <table style="font-size:11px"><thead><tr><th>Tipo</th><th>Fecha</th><th>Regional</th><th>Cadena</th><th>Resultado</th><th>Nivel</th><th>Ver detalle</th></tr></thead><tbody>`;
+
+  autoRows.forEach((r,i)=>{
+    const pct=getPctNum(r[7]);
+    html+=`<tr>
+      <td>Autoevaluación</td>
+      <td>${r[4]||String(r[0]).slice(0,10)}</td>
+      <td>${r[2]||'—'}</td><td>${r[3]||'—'}</td>
+      <td><b>${pct}%</b></td>
+      <td>${getNivelBadge(r[8])}</td>
+      <td><button class="btn-sm btn-purple" style="font-size:10px;padding:3px 8px" onclick="verDetalleEval('auto',${allData.auto.rows.indexOf(r)})">👁 Ver</button></td>
+    </tr>`;
+  });
+  convRows.forEach((r,i)=>{
+    const pct=getPctNum(r[5]);
+    html+=`<tr>
+      <td>CONVERTIR</td>
+      <td>${r[4]||String(r[0]).slice(0,10)}</td>
+      <td>${r[2]||'—'}</td><td>${r[3]||'—'}</td>
+      <td><b>${pct}%</b></td>
+      <td>${getNivelBadge(r[6])}</td>
+      <td><button class="btn-sm btn-purple" style="font-size:10px;padding:3px 8px" onclick="verDetalleEval('conv',${allData.conv.rows.indexOf(r)})">👁 Ver</button></td>
+    </tr>`;
+  });
+  ventRows.forEach((r,i)=>{
+    const pct=getPctNum(r[5]);
+    html+=`<tr>
+      <td>Ventas</td>
+      <td>${r[4]||String(r[0]).slice(0,10)}</td>
+      <td>${r[2]||'—'}</td><td>${r[3]||'—'}</td>
+      <td><b>${pct}%</b></td>
+      <td>${getNivelBadge(r[6])}</td>
+      <td><button class="btn-sm btn-purple" style="font-size:10px;padding:3px 8px" onclick="verDetalleEval('vent',${allData.vent.rows.indexOf(r)})">👁 Ver</button></td>
+    </tr>`;
+  });
   html+='</tbody></table></div>';
+
+  // Modal de detalle
+  html+=`<div id="eval-detail-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:16px;padding:24px;max-width:620px;width:90%;max-height:80vh;overflow-y:auto;position:relative">
+      <button onclick="document.getElementById('eval-detail-modal').style.display='none'" style="position:absolute;top:12px;right:12px;background:#f0eff8;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:700;font-size:13px">✕ Cerrar</button>
+      <div id="eval-detail-content"></div>
+    </div>
+  </div>`;
+
   document.getElementById('promotores-list').innerHTML='';
   document.getElementById('promotor-detail').innerHTML=html;
   document.getElementById('promotor-detail').style.display='block';
+}
+
+function verDetalleEval(tipo,idx){
+  const d=allData[tipo];
+  if(!d||!d.rows[idx]){return;}
+  const row=d.rows[idx];
+  const headers=d.headers||[];
+  let html=`<div style="font-size:15px;font-weight:800;color:#26215C;margin-bottom:4px">${tipo==='auto'?'Autoevaluación':tipo==='conv'?'Evaluación CONVERTIR':'Evaluación de Ventas'}</div>`;
+  html+=`<div style="font-size:12px;color:#888;margin-bottom:16px">${row[1]||'—'} · ${row[4]||String(row[0]).slice(0,10)} · ${row[2]||'—'}</div>`;
+  html+=`<table style="font-size:12px;width:100%"><thead><tr><th style="text-align:left;padding:6px 10px;background:#f5f4fe;color:#534AB7">Campo</th><th style="text-align:left;padding:6px 10px;background:#f5f4fe;color:#534AB7">Valor</th></tr></thead><tbody>`;
+  row.forEach((val,i)=>{
+    const label=headers[i]||'Col '+(i+1);
+    if(!val&&val!==0)return;
+    const isScore=label.includes('%')||label.includes('Pct')||label.includes('score');
+    const display=isScore&&typeof val==='number'&&val<=1.5&&val>0?(Math.round(val*100)+'%'):(String(val));
+    html+=`<tr style="border-bottom:1px solid #f0f0f0"><td style="padding:6px 10px;font-weight:600;color:#444">${label}</td><td style="padding:6px 10px;color:#1a1a1a">${display}</td></tr>`;
+  });
+  html+='</tbody></table>';
+  document.getElementById('eval-detail-content').innerHTML=html;
+  document.getElementById('eval-detail-modal').style.display='flex';
 }
 
 function descargarPerfilPDF(nombre){
