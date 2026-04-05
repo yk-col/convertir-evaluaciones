@@ -42,7 +42,7 @@ body{font-family:'Montserrat',system-ui,sans-serif;background:#f0eff8;color:#1a1
 .sb-toggle{position:fixed;top:12px;left:228px;z-index:300;background:#534AB7;border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:left .25s;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .sb-toggle.left{left:8px}
 .sb-toggle svg{fill:#fff;width:14px;height:14px}
-.content{margin-left:220px;padding:18px;transition:margin-left .25s;min-width:0}
+.content{margin-left:220px;padding:18px;padding-top:52px;transition:margin-left .25s;min-width:0}
 .content.full{margin-left:0}
 /* Common */
 .page-header{margin-bottom:14px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px}
@@ -104,7 +104,7 @@ tr:hover td{background:#fafafe}
   .sidebar.open{transform:translateX(0)}
   .sb-toggle{left:8px}
   .sb-toggle.open{left:268px}
-  .content{margin-left:0!important;padding:10px}
+  .content{margin-left:0!important;padding:10px;padding-top:50px}
   .stats-row{grid-template-columns:1fr 1fr}
   .charts-grid{grid-template-columns:1fr}
   .filters{flex-direction:column;align-items:stretch}
@@ -292,7 +292,7 @@ tr:hover td{background:#fafafe}
 </div>
 
 <script>
-const SHEET_URL='https://script.google.com/macros/s/AKfycbzv9MvljOIlcw-_ujQQPDp7QrjQetHOwN-bOyXmsSxwYEc3iinCUJHA2KL0LfPAIXwD/exec';
+const SHEET_URL='https://script.google.com/macros/s/AKfycbxVB9q9XnAUN0vSH4v_avsbky2rROE-eVVqq8rj-9BW1hlR_5grfKyRXqBDXS5E8YXH/exec';
 let currentUser=null;
 let allData={auto:{headers:[],rows:[]},conv:{headers:[],rows:[]},vent:{headers:[],rows:[]}};
 let chartRefs={};
@@ -431,7 +431,16 @@ function nivelBadge(n){
   return'—';
 }
 function pctColor(p){return p>=80?'#0F6E56':p>=60?'#534AB7':p>=40?'#854F0B':'#A32D2D';}
-function getCCIdx(h){if(!h)return-1;return h.findIndex(x=>String(x).toLowerCase().replace(/[áéíóúü]/g,c=>({á:'a',é:'e',í:'i',ó:'o',ú:'u',ü:'u'}[c]||c)).includes('cc')||String(x).toLowerCase().includes('cedula'));}
+function getCCIdx(h){
+  if(!h)return -1;
+  // Buscar exactamente columna 'CC' o 'Cedula'/'Cédula'
+  const idx=h.findIndex(x=>{
+    const s=String(x).trim().toLowerCase()
+      .replace(/á/g,'a').replace(/é/g,'e').replace(/í/g,'i').replace(/ó/g,'o').replace(/ú/g,'u');
+    return s==='cc'||s==='cedula'||s==='cédula'||s==='cedula_promotor'||s==='num_cedula';
+  });
+  return idx;
+}
 function getFiltered(key){
   const rows=allData[key].rows;
   if(!gRegional)return rows;
