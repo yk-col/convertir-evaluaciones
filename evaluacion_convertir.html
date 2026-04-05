@@ -366,10 +366,7 @@
       <div class="sc"><div class="sc-val" id="sc-tot">—</div><div class="sc-lbl">Respondidas</div></div>
     </div>
     <div class="sheets-box">
-      <strong>Registro de evaluación</strong><br>
-      Guarda tus resultados en la base de datos del Modelo CONVERTIR.
-      <br><button class="btn-sheet" onclick="enviarSheets()">Guardar mis resultados</button>
-      <div id="sheets-status" style="margin-top:6px;font-size:11px;color:var(--color-text-secondary,#666)"></div>
+      <div id="sheets-status" style="font-size:12px;color:#0F6E56"></div>
     </div>
   </div>
 </div>
@@ -414,16 +411,16 @@ function evaluar(){
   document.getElementById('fc-desc').textContent=n.desc;
   gData={nombre:document.getElementById('nombre').value,fecha:document.getElementById('fecha').value,pdv:document.getElementById('pdv').value,pct,nivel:n.label,ok,total,timestamp:new Date().toISOString()};
   document.getElementById('resultado').scrollIntoView({behavior:'smooth'});
+  setTimeout(()=>enviarSheets(),800);
 }
 
 function enviarSheets(){
   const st=document.getElementById('sheets-status');
-  if(!gData.nombre){st.textContent='Completa tu nombre antes de guardar.';st.style.color='#A32D2D';return;}
   const SHEET_URL='https://script.google.com/macros/s/AKfycbxVB9q9XnAUN0vSH4v_avsbky2rROE-eVVqq8rj-9BW1hlR_5grfKyRXqBDXS5E8YXH/exec';
   const row=[gData.timestamp,gData.nombre,gData.fecha,gData.pdv,gData.pct+'%',gData.nivel,gData.ok,gData.total];
-  st.textContent='Enviando...';st.style.color='#534AB7';
-  fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tipo:'evaluacion',datos:row})})
-  .then(()=>{st.textContent='Guardado correctamente.';st.style.color='#0F6E56';})
-  .catch(()=>{st.textContent='Sin conexión. Anota: '+gData.pct+'% · '+gData.nivel;st.style.color='#854F0B';});
+  if(st){st.textContent='Guardando...';st.style.color='#534AB7';}
+  fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tipo:'evaluacion_convertir',datos:row})})
+  .then(()=>{if(st){st.textContent='✓ Datos guardados automáticamente.';st.style.color='#0F6E56';}})
+  .catch(()=>{if(st){st.textContent='⚠ No se pudo guardar. Revisa tu conexión.';st.style.color='#854F0B';}});
 }
 </script>
