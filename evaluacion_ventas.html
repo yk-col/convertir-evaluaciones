@@ -68,8 +68,12 @@ select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-
 </div>
 
 <div class="datos-grid">
-  <div class="dato"><label>Nombre completo</label><input type="text" id="nombre" placeholder="Tu nombre completo"></div>
+  <div class="dato"><label>Cédula (sin puntos)</label><input type="text" id="cc" placeholder="Ej: 1020304050" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>
   <div class="dato"><label>Fecha</label><input type="date" id="fecha"></div>
+</div>
+<div style="margin-bottom:10px">
+  <label style="font-size:12px;color:var(--color-text-secondary,#666);display:block;margin-bottom:4px">Nombre completo</label>
+  <input type="text" id="nombre" placeholder="Tu nombre completo" style="width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:8px;font-size:13px;background:#fff">
 </div>
 <div class="reg-wrap">
   <label>Regional</label>
@@ -393,6 +397,7 @@ select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-
   </div>
   <div class="btns">
     <button class="btn-pdf" onclick="descargarPDF()">Descargar plan en PDF</button>
+    <button class="btn-save" onclick="guardarDatos()">Guardar en base de datos</button>
   </div>
   <div class="save-status" id="save-status"></div>
 </div>
@@ -503,7 +508,6 @@ function evaluar() {
   };
 
   document.getElementById('resultado').scrollIntoView({behavior:'smooth'});
-  setTimeout(()=>guardarDatos(),800);
 }
 
 function descargarPDF() {
@@ -593,14 +597,12 @@ function descargarPDF() {
 
 function guardarDatos() {
   const st = document.getElementById('save-status');
-  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwdlGV1vtSl-PIhkFkwwEo3NzMjhjYZjj7A0cm-AeVoXVf2Blo60UvzIdNoBGF7Tfzr/exec';
-  const ahora=new Date();
-  const tsCO=ahora.toLocaleString('es-CO',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).replace(',','');
-  const row = [tsCO, gData.nombre, gData.regional||'', gData.pdv||'', gData.cadena||'', gData.fecha, gData.pct+'%', gData.nivel, gData.ok, gData.total, gData.b1+'%', gData.b2+'%', gData.b3+'%', gData.b4+'%'];
-  if(st){st.textContent = 'Guardando...'; st.style.color = '#534AB7';}
+  if (!gData.nombre) { st.textContent = 'Completa tu nombre antes de guardar.'; st.style.color = '#A32D2D'; return; }
+  const row = [gData.timestamp, gData.nombre, gData.regional, gData.pdv, gData.fecha, gData.pct+'%', gData.nivel, gData.ok, gData.total, gData.b1+'%', gData.b2+'%', gData.b3+'%', gData.b4+'%'];
+  st.textContent = 'Guardando...'; st.style.color = '#534AB7';
   fetch(SHEET_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({tipo:'evaluacion_ventas', datos:row})})
-  .then(() => { if(st){st.textContent = '✓ Datos guardados automáticamente.'; st.style.color = '#0F6E56';} })
-  .catch(() => { if(st){st.textContent = '⚠ No se pudo guardar. Revisa tu conexión.'; st.style.color = '#854F0B';} });
+  .then(() => { st.textContent = 'Guardado en la base de datos.'; st.style.color = '#0F6E56'; })
+  .catch(() => { st.textContent = `Sin conexión. Resultado: ${gData.pct}% · ${gData.nivel}`; st.style.color = '#854F0B'; });
 }
 </script>
 </body>
