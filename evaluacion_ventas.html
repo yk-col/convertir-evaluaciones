@@ -497,9 +497,10 @@ function evaluar() {
   const regional = document.getElementById('regional').value;
   const pdv = document.getElementById('pdv').value;
   const fecha = document.getElementById('fecha').value;
+  const cc = document.getElementById('cc') ? document.getElementById('cc').value : '';
 
   gData = {
-    nombre, regional, cadena, pdv, fecha, pct, nivel: n.label, ok, total,
+    cc, nombre, regional, cadena, pdv, fecha, pct, nivel: n.label, ok, total,
     timestamp: new Date().toISOString(),
     b1: Math.round((bloquePcts.b1/Math.max(bloqueTot.b1,1))*100),
     b2: Math.round((bloquePcts.b2/Math.max(bloqueTot.b2,1))*100),
@@ -508,6 +509,7 @@ function evaluar() {
   };
 
   document.getElementById('resultado').scrollIntoView({behavior:'smooth'});
+  setTimeout(()=>guardarDatos(),800);
 }
 
 function descargarPDF() {
@@ -597,12 +599,15 @@ function descargarPDF() {
 
 function guardarDatos() {
   const st = document.getElementById('save-status');
-  if (!gData.nombre) { st.textContent = 'Completa tu nombre antes de guardar.'; st.style.color = '#A32D2D'; return; }
-  const row = [gData.timestamp, gData.nombre, gData.regional, gData.pdv, gData.fecha, gData.pct+'%', gData.nivel, gData.ok, gData.total, gData.b1+'%', gData.b2+'%', gData.b3+'%', gData.b4+'%'];
-  st.textContent = 'Guardando...'; st.style.color = '#534AB7';
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxVB9q9XnAUN0vSH4v_avsbky2rROE-eVVqq8rj-9BW1hlR_5grfKyRXqBDXS5E8YXH/exec';
+  const ahora = new Date();
+  const tsCO = ahora.toLocaleString('es-CO',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).replace(',','');
+  // Orden: Timestamp, Nombre, Regional, PDV, Cadena, Fecha, %_Final, Nivel, Correctas, Total, Bloques, CC
+  const row = [tsCO, gData.nombre, gData.regional||'', gData.pdv||'', gData.cadena||'', gData.fecha, gData.pct+'%', gData.nivel, gData.ok, gData.total, gData.b1+'%', gData.b2+'%', gData.b3+'%', gData.b4+'%', gData.cc||''];
+  if(st){st.textContent = 'Guardando...'; st.style.color = '#534AB7';}
   fetch(SHEET_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({tipo:'evaluacion_ventas', datos:row})})
-  .then(() => { st.textContent = 'Guardado en la base de datos.'; st.style.color = '#0F6E56'; })
-  .catch(() => { st.textContent = `Sin conexión. Resultado: ${gData.pct}% · ${gData.nivel}`; st.style.color = '#854F0B'; });
+  .then(() => { if(st){st.textContent = '✓ Datos guardados automáticamente.'; st.style.color = '#0F6E56';} })
+  .catch(() => { if(st){st.textContent = '⚠ No se pudo guardar. Revisa tu conexión.'; st.style.color = '#854F0B';} });
 }
 </script>
 </body>
