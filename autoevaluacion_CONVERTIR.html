@@ -542,7 +542,7 @@ function enviarSheets(){
   const ahora=new Date();
   const tsCO=ahora.toLocaleString('es-CO',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).replace(',','');
   const row=[tsCO,globalData.nombre,globalData.regional||'',globalData.pdv||'',globalData.cadena||'',globalData.fecha,globalData.pctB+'%',globalData.pctD+'%',globalData.pctTotal+'%',globalData.perfil,globalData.totalResp,globalData.debilesStr||'',...(globalData.scoreB||[]),...(globalData.scoreD||[])];
-  const SHEET_URL='https://script.google.com/macros/s/AKfycbxVB9q9XnAUN0vSH4v_avsbky2rROE-eVVqq8rj-9BW1hlR_5grfKyRXqBDXS5E8YXH/exec';
+  const SHEET_URL='https://script.google.com/macros/s/AKfycbwdlGV1vtSl-PIhkFkwwEo3NzMjhjYZjj7A0cm-AeVoXVf2Blo60UvzIdNoBGF7Tfzr/exec';
   if(st){st.textContent='Guardando...';st.style.color='#534AB7';}
   fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tipo:'autoevaluacion',datos:row})})
   .then(()=>{if(st){st.textContent='✓ Datos guardados automáticamente.';st.style.color='#0F6E56';}})
