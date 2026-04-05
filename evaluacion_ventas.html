@@ -393,14 +393,13 @@ select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-
   </div>
   <div class="btns">
     <button class="btn-pdf" onclick="descargarPDF()">Descargar plan en PDF</button>
-    <button class="btn-save" onclick="guardarDatos()">Guardar en base de datos</button>
   </div>
   <div class="save-status" id="save-status"></div>
 </div>
 </div>
 
 <script>
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxVB9q9XnAUN0vSH4v_avsbky2rROE-eVVqq8rj-9BW1hlR_5grfKyRXqBDXS5E8YXH/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzafaTQa0tTS4lSG9ZEoerxkbTZwQ0IiImmWCs-L5AryPFr5BwNNFlzD4_ie6chAG3L/exec';
 const correctas = {p1:1,p2:1,p3:1,p4:1,p5:1,p6:1,p7:1,p8:1,p9:1,p10:1,p11:1,p12:1,p13:1,p14:1,p15:1,p16:1,p17:1,p18:1,p19:1,p20:1};
 const bloqueMap = {p1:'b1',p2:'b1',p3:'b1',p4:'b1',p5:'b1',p6:'b2',p7:'b2',p8:'b2',p9:'b2',p10:'b2',p11:'b3',p12:'b3',p13:'b3',p14:'b3',p15:'b3',p16:'b4',p17:'b4',p18:'b4',p19:'b4',p20:'b4'};
 const bloqueNames = {b1:'Conocimiento del producto',b2:'Comprensión del cliente',b3:'Proceso de venta',b4:'Ética comercial'};
@@ -504,6 +503,7 @@ function evaluar() {
   };
 
   document.getElementById('resultado').scrollIntoView({behavior:'smooth'});
+  setTimeout(()=>guardarDatos(),800);
 }
 
 function descargarPDF() {
@@ -593,12 +593,12 @@ function descargarPDF() {
 
 function guardarDatos() {
   const st = document.getElementById('save-status');
-  if (!gData.nombre) { st.textContent = 'Completa tu nombre antes de guardar.'; st.style.color = '#A32D2D'; return; }
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxVB9q9XnAUN0vSH4v_avsbky2rROE-eVVqq8rj-9BW1hlR_5grfKyRXqBDXS5E8YXH/exec';
   const row = [gData.timestamp, gData.nombre, gData.regional, gData.pdv, gData.fecha, gData.pct+'%', gData.nivel, gData.ok, gData.total, gData.b1+'%', gData.b2+'%', gData.b3+'%', gData.b4+'%'];
-  st.textContent = 'Guardando...'; st.style.color = '#534AB7';
+  if(st){st.textContent = 'Guardando...'; st.style.color = '#534AB7';}
   fetch(SHEET_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({tipo:'evaluacion_ventas', datos:row})})
-  .then(() => { st.textContent = 'Guardado en la base de datos.'; st.style.color = '#0F6E56'; })
-  .catch(() => { st.textContent = `Sin conexión. Resultado: ${gData.pct}% · ${gData.nivel}`; st.style.color = '#854F0B'; });
+  .then(() => { if(st){st.textContent = '✓ Datos guardados automáticamente.'; st.style.color = '#0F6E56';} })
+  .catch(() => { if(st){st.textContent = '⚠ No se pudo guardar. Revisa tu conexión.'; st.style.color = '#854F0B';} });
 }
 </script>
 </body>
