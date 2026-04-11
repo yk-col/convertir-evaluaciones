@@ -560,7 +560,7 @@ function enviarSheets(){
   .then(()=>{if(st){st.textContent='✓ Datos guardados automáticamente.';st.style.color='#0F6E56';}})
   .catch(()=>{if(st){st.textContent='⚠ No se pudo guardar. Revisa tu conexión.';st.style.color='#854F0B';}});
 }
-  function(){
+function(){
   'use strict';
 
   // ── Leer sesión ────────────────────────────────────────────────────────────
@@ -667,7 +667,7 @@ function enviarSheets(){
     if(ncEl){ ncEl.value=session.nombreCompleto; ncEl.setAttribute('disabled',''); }
   });
 
-})();
+}();
 </script>
 </body>
 </html>
