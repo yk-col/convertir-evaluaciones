@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acceso Promotores — CONVERTIR</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --purple:#534AB7;--purple-d:#26215C;--purple-l:#EEEDFE;--purple-m:#7F77DD;
+  --green:#0F6E56;--green-l:#E1F5EE;--amber:#854F0B;--amber-l:#FAEEDA;
+  --blue:#185FA5;--blue-l:#E6F1FB;--red:#A32D2D;--red-l:#FCEBEB;
+  --gray:#F1EFE8;--gray-d:#5F5E5A;--border:#e0e0e0;
+}
+body{font-family:'Montserrat',system-ui,sans-serif;background:linear-gradient(135deg,#f0eff8 0%,#e8f4f0 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+.container{width:100%;max-width:460px}
+
+/* LOGO */
+.logo{text-align:center;margin-bottom:2rem}
+.logo-mark{width:64px;height:64px;background:var(--purple);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px}
+.logo-mark svg{width:36px;height:36px;fill:white}
+.logo h1{font-size:28px;font-weight:800;color:var(--purple-d);letter-spacing:2px}
+.logo p{font-size:12px;color:var(--gray-d);margin-top:4px;font-weight:500}
+
+/* CARD */
+.card{background:#fff;border-radius:20px;box-shadow:0 4px 40px rgba(83,74,183,.1);overflow:hidden}
+.card-header{background:var(--purple);padding:20px 24px}
+.card-header h2{font-size:15px;font-weight:700;color:#EEEDFE;margin-bottom:3px}
+.card-header p{font-size:12px;color:#AFA9EC}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border)}
+.tab{flex:1;padding:14px 8px;font-size:12px;font-weight:600;color:var(--gray-d);cursor:pointer;text-align:center;border-bottom:2.5px solid transparent;transition:all .2s;font-family:'Montserrat',sans-serif;background:none;border-top:none;border-left:none;border-right:none}
+.tab.active{color:var(--purple);border-bottom-color:var(--purple)}
+.tab:hover{color:var(--purple);background:#fafafe}
+
+/* PANELS */
+.panel{display:none;padding:24px}
+.panel.active{display:block}
+.field{margin-bottom:16px}
+.field label{font-size:11px;font-weight:700;color:#444;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Montserrat',sans-serif;background:#fff;color:#1a1a1a;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:var(--purple);outline:none;box-shadow:0 0 0 3px rgba(83,74,183,.08)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hint{font-size:11px;color:var(--gray-d);margin-top:5px;line-height:1.4}
+.hint strong{color:var(--purple)}
+
+/* BUTTONS */
+.btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;transition:all .2s;margin-top:4px}
+.btn-primary{background:var(--purple);color:#fff}
+.btn-primary:hover{background:var(--purple-d)}
+.btn-secondary{background:var(--purple-l);color:var(--purple);margin-top:10px}
+.btn-secondary:hover{background:#DDDAF8}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#085041}
+
+/* ERROR / SUCCESS */
+.msg{font-size:12px;margin-top:10px;padding:10px 12px;border-radius:8px;display:none;font-weight:500}
+.msg.error{background:var(--red-l);color:var(--red);border:1px solid #F09595}
+.msg.success{background:var(--green-l);color:var(--green);border:1px solid #5DCAA5}
+.msg.info{background:var(--blue-l);color:var(--blue);border:1px solid #85B7EB}
+
+/* SESSION ACTIVE */
+.session-active{display:none;padding:24px}
+.session-card{background:var(--purple-l);border:1.5px solid var(--purple-m);border-radius:12px;padding:16px;margin-bottom:16px}
+.session-avatar{width:48px;height:48px;background:var(--purple);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;margin-bottom:12px}
+.session-name{font-size:16px;font-weight:700;color:var(--purple-d);margin-bottom:2px}
+.session-meta{font-size:12px;color:var(--gray-d)}
+.session-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.pill{font-size:10px;font-weight:600;padding:3px 10px;border-radius:99px;background:var(--purple);color:#fff}
+.eval-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px}
+.eval-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;text-decoration:none}
+.eval-card:hover{border-color:var(--purple);box-shadow:0 2px 12px rgba(83,74,183,.1);transform:translateY(-1px)}
+.eval-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.eval-info{flex:1}
+.eval-title{font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:2px}
+.eval-desc{font-size:11px;color:var(--gray-d)}
+.eval-time{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;margin-top:4px;display:inline-block}
+.e1 .eval-icon{background:var(--purple-l);color:var(--purple)}
+.e1 .eval-time{background:var(--purple-l);color:var(--purple)}
+.e2 .eval-icon{background:var(--amber-l);color:var(--amber)}
+.e2 .eval-time{background:var(--amber-l);color:var(--amber)}
+.e3 .eval-icon{background:var(--green-l);color:var(--green)}
+.e3 .eval-time{background:var(--green-l);color:var(--green)}
+.logout-btn{width:100%;padding:10px;background:#fff;color:var(--gray-d);border:1.5px solid var(--border);border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;transition:all .2s}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+.progress-wrap{background:var(--gray);border-radius:10px;padding:12px 14px;margin-bottom:14px}
+.progress-title{font-size:11px;font-weight:700;color:var(--gray-d);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.progress-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.progress-label{font-size:11px;color:#444;min-width:130px}
+.progress-bar{flex:1;background:#fff;border-radius:99px;height:6px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;background:var(--purple)}
+.progress-val{font-size:11px;font-weight:700;color:var(--purple);min-width:30px;text-align:right}
+.divider{height:1px;background:var(--border);margin:16px 0}
+.code-display{background:var(--purple-d);color:#EEEDFE;border-radius:10px;padding:12px 14px;font-size:13px;font-family:'Montserrat',sans-serif;margin-top:8px;display:none}
+.code-display strong{font-size:18px;letter-spacing:4px;color:#fff;display:block;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <h1>CONVERTIR</h1>
+    <p>Spectrum Brands · EFICACIA S.A.S.</p>
+  </div>
+
+  <!-- LOGIN CARD -->
+  <div class="card" id="login-card">
+    <div class="card-header">
+      <h2>Acceso al sistema de evaluación</h2>
+      <p>Elige cómo quieres ingresar</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('quick',this)">Acceso rápido</button>
+      <button class="tab" onclick="switchTab('code',this)">Código promotor</button>
+      <button class="tab" onclick="switchTab('account',this)">Mi cuenta</button>
+    </div>
+
+    <!-- PANEL 1: ACCESO RÁPIDO -->
+    <div class="panel active" id="panel-quick">
+      <div class="field-row">
+        <div class="field">
+          <label>Nombre</label>
+          <input type="text" id="q-nombre" placeholder="Tu nombre completo" autocomplete="name">
+        </div>
+        <div class="field">
+          <label>Apellido</label>
+          <input type="text" id="q-apellido" placeholder="Tu apellido">
+        </div>
+      </div>
+      <div class="field">
+        <label>Regional</label>
+        <select id="q-regional">
+          <option value="">— Selecciona —</option>
+          <option>Antioquia</option><option>Centro</option>
+          <option>Eje Cafetero</option><option>Norte</option>
+          <option>Occidente</option><option>Oriente</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Cadena</label>
+        <select id="q-cadena">
+          <option value="">— Selecciona —</option>
+          <option>ALMACENES ÉXITO S.A</option>
+          <option>ALMACENES MAXIMO S.A.S. PEPE GANGA</option>
+          <option>CENCOSUD COLOMBIA S.A.</option>
+          <option>COLOMBIANA DE COMERCIO Y/O ALKOSTO S.A.</option>
+          <option>FALABELLA</option><option>MECANELECTRO S.A.S</option>
+          <option>SODIMAC COLOMBIA S.A.(HOMECENTER)</option>
+          <option>SUPERTIENDAS Y DROGUERIAS OLIMPICAS S.A.</option>
+          <option>PANAMERICANA</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Punto de venta (PDV)</label>
+        <input type="text" id="q-pdv" placeholder="Nombre de la tienda">
+      </div>
+      <div class="msg" id="q-msg"></div>
+      <button class="btn btn-primary" onclick="loginQuick()">Continuar →</button>
+      <p class="hint" style="margin-top:12px">¿Tu coordinador ya te asignó un código? Usa la pestaña <strong>Código promotor</strong> para guardar tu progreso entre sesiones.</p>
+    </div>
+
+    <!-- PANEL 2: CÓDIGO PROMOTOR -->
+    <div class="panel" id="panel-code">
+      <div class="field">
+        <label>Código de promotor</label>
+        <input type="text" id="c-codigo" placeholder="Ej: SPB-2026-042" autocomplete="off" style="text-transform:uppercase;letter-spacing:2px">
+        <p class="hint">Tu coordinador te asigna este código. Úsalo siempre para que tu historial quede vinculado a tu perfil.</p>
+      </div>
+      <div class="field">
+        <label>PIN (opcional)</label>
+        <input type="password" id="c-pin" placeholder="PIN de 4 dígitos (si tienes uno)" maxlength="4">
+        <p class="hint">Si no tienes PIN, déjalo en blanco.</p>
+      </div>
+      <div class="msg" id="c-msg"></div>
+      <button class="btn btn-primary" onclick="loginCode()">Ingresar con código →</button>
+      <div class="divider"></div>
+      <p class="hint" style="margin-bottom:10px"><strong>¿No tienes código aún?</strong> Usa Acceso rápido por ahora. Pídele a tu coordinador que te asigne uno en el panel de administración.</p>
+    </div>
+
+    <!-- PANEL 3: CUENTA PROPIA -->
+    <div class="panel" id="panel-account">
+      <div id="login-form">
+        <div class="field">
+          <label>Correo electrónico</label>
+          <input type="email" id="a-email" placeholder="tucorreo@email.com" autocomplete="email">
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="a-pass" placeholder="Tu contraseña" autocomplete="current-password" onkeypress="if(event.key==='Enter')loginAccount()">
+        </div>
+        <div class="msg" id="a-msg"></div>
+        <button class="btn btn-primary" onclick="loginAccount()">Ingresar →</button>
+        <button class="btn btn-secondary" onclick="showRegister()">Crear cuenta nueva</button>
+      </div>
+      <div id="register-form" style="display:none">
+        <div class="field-row">
+          <div class="field">
+            <label>Nombre</label>
+            <input type="text" id="r-nombre" placeholder="Nombre">
+          </div>
+          <div class="field">
+            <label>Apellido</label>
+            <input type="text" id="r-apellido" placeholder="Apellido">
+          </div>
+        </div>
+        <div class="field">
+          <label>Correo electrónico</label>
+          <input type="email" id="r-email" placeholder="tucorreo@email.com">
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="r-pass" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="field">
+          <label>Regional</label>
+          <select id="r-regional">
+            <option value="">— Selecciona —</option>
+            <option>Antioquia</option><option>Centro</option>
+            <option>Eje Cafetero</option><option>Norte</option>
+            <option>Occidente</option><option>Oriente</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Cadena</label>
+          <select id="r-cadena">
+            <option value="">— Selecciona —</option>
+            <option>ALMACENES ÉXITO S.A</option>
+            <option>ALMACENES MAXIMO S.A.S. PEPE GANGA</option>
+            <option>CENCOSUD COLOMBIA S.A.</option>
+            <option>COLOMBIANA DE COMERCIO Y/O ALKOSTO S.A.</option>
+            <option>FALABELLA</option><option>MECANELECTRO S.A.S</option>
+            <option>SODIMAC COLOMBIA S.A.(HOMECENTER)</option>
+            <option>SUPERTIENDAS Y DROGUERIAS OLIMPICAS S.A.</option>
+            <option>PANAMERICANA</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Punto de venta</label>
+          <input type="text" id="r-pdv" placeholder="Nombre de la tienda">
+        </div>
+        <div class="msg" id="r-msg"></div>
+        <button class="btn btn-green" onclick="registerAccount()">Crear mi cuenta →</button>
+        <button class="btn btn-secondary" onclick="showLogin()">Ya tengo cuenta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SESSION ACTIVE CARD -->
+  <div class="card" id="session-card" style="display:none">
+    <div class="session-active" id="session-content">
+      <div class="session-card">
+        <div class="session-avatar" id="sess-avatar">—</div>
+        <div class="session-name" id="sess-name">—</div>
+        <div class="session-meta" id="sess-meta">—</div>
+        <div class="session-pills" id="sess-pills"></div>
+      </div>
+
+      <div class="progress-wrap" id="progress-wrap" style="display:none">
+        <div class="progress-title">Tu progreso en esta sesión</div>
+        <div id="progress-items"></div>
+      </div>
+
+      <p style="font-size:12px;font-weight:700;color:var(--gray-d);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">¿Qué quieres hacer hoy?</p>
+
+      <div class="eval-grid">
+        <a class="eval-card e1" id="link-auto" href="autoevaluacion_CONVERTIR.html">
+          <div class="eval-icon">★</div>
+          <div class="eval-info">
+            <div class="eval-title">Autoevaluación de competencias</div>
+            <div class="eval-desc">Habilidades blandas y duras · 40 preguntas</div>
+            <span class="eval-time">~12 minutos</span>
+          </div>
+        </a>
+        <a class="eval-card e2" id="link-conv" href="evaluacion_convertir.html">
+          <div class="eval-icon">▲</div>
+          <div class="eval-info">
+            <div class="eval-title">Evaluación Modelo CONVERTIR</div>
+            <div class="eval-desc">Casos prácticos y aplicación en PDV · 20 preguntas</div>
+            <span class="eval-time">~15 minutos</span>
+          </div>
+        </a>
+        <a class="eval-card e3" id="link-vent" href="evaluacion_ventas.html">
+          <div class="eval-icon">◆</div>
+          <div class="eval-info">
+            <div class="eval-title">Evaluación de conocimientos en ventas</div>
+            <div class="eval-desc">Técnicas de venta y canal moderno · 20 preguntas</div>
+            <span class="eval-time">~15 minutos</span>
+          </div>
+        </a>
+      </div>
+
+      <button class="logout-btn" onclick="cerrarSesion()">Cerrar sesión</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHEET_URL='https://script.google.com/macros/s/AKfycby-Gg5tkd-sPAMgv5xNugonP32TC8NYjdiNbftj0jPU6xo58InTG_dqO26fbtSq5BTJ/exec';
+
+// ── STORAGE HELPERS ──────────────────────────────────────────────────────────
+function getUsers(){
+  try{ return JSON.parse(localStorage.getItem('conv_users')||'{}'); }
+  catch(e){ return {}; }
+}
+function saveUsers(u){ localStorage.setItem('conv_users', JSON.stringify(u)); }
+function getSession(){ 
+  try{ return JSON.parse(sessionStorage.getItem('conv_session')||'null'); }
+  catch(e){ return null; }
+}
+function saveSession(s){ sessionStorage.setItem('conv_session', JSON.stringify(s)); }
+function clearSession(){ sessionStorage.removeItem('conv_session'); }
+
+// ── SESSION DATA — shared with all evaluation pages ──────────────────────────
+// Other pages read this: JSON.parse(sessionStorage.getItem('conv_session'))
+// Fields: nombre, apellido, regional, cadena, pdv, email, tipo ('quick'|'code'|'account'), codigo, ts
+
+// ── TAB SWITCH ───────────────────────────────────────────────────────────────
+function switchTab(panel, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+panel).classList.add('active');
+}
+
+// ── SHOW MSG ─────────────────────────────────────────────────────────────────
+function showMsg(id, text, type='error'){
+  const el=document.getElementById(id);
+  el.textContent=text; el.className='msg '+type; el.style.display='block';
+  setTimeout(()=>el.style.display='none', 4000);
+}
+
+// ── LOGIN QUICK ──────────────────────────────────────────────────────────────
+function loginQuick(){
+  const nombre=document.getElementById('q-nombre').value.trim();
+  const apellido=document.getElementById('q-apellido').value.trim();
+  const regional=document.getElementById('q-regional').value;
+  const cadena=document.getElementById('q-cadena').value;
+  const pdv=document.getElementById('q-pdv').value.trim();
+  if(!nombre||!apellido) return showMsg('q-msg','Ingresa tu nombre y apellido.');
+  if(!regional) return showMsg('q-msg','Selecciona tu regional.');
+  if(!cadena) return showMsg('q-msg','Selecciona tu cadena.');
+  const session={nombre, apellido, nombreCompleto:`${nombre} ${apellido}`,
+    regional, cadena, pdv, tipo:'quick', codigo:'', email:'',
+    ts: new Date().toISOString(), fecha: new Date().toLocaleDateString('es-CO')};
+  saveSession(session);
+  abrirSesion(session);
+}
+
+// ── LOGIN CODE ────────────────────────────────────────────────────────────────
+function loginCode(){
+  const codigo=document.getElementById('c-codigo').value.trim().toUpperCase();
+  const pin=document.getElementById('c-pin').value.trim();
+  if(!codigo) return showMsg('c-msg','Ingresa tu código de promotor.');
+  const users=getUsers();
+  const user=users[codigo];
+  if(!user) return showMsg('c-msg','Código no encontrado. Verifica con tu coordinador.');
+  if(user.pin && user.pin !== pin) return showMsg('c-msg','PIN incorrecto.');
+  const session={...user, tipo:'code', codigo, ts:new Date().toISOString(),
+    fecha:new Date().toLocaleDateString('es-CO'), nombreCompleto:`${user.nombre} ${user.apellido}`};
+  saveSession(session);
+  abrirSesion(session);
+}
+
+// ── LOGIN ACCOUNT ─────────────────────────────────────────────────────────────
+function loginAccount(){
+  const email=document.getElementById('a-email').value.trim().toLowerCase();
+  const pass=document.getElementById('a-pass').value;
+  if(!email||!pass) return showMsg('a-msg','Completa todos los campos.');
+  const users=getUsers();
+  const key=`email_${email}`;
+  const user=users[key];
+  if(!user) return showMsg('a-msg','Correo no registrado. Crea una cuenta primero.');
+  if(user.pass!==pass) return showMsg('a-msg','Contraseña incorrecta.');
+  const session={...user, tipo:'account', ts:new Date().toISOString(),
+    fecha:new Date().toLocaleDateString('es-CO'), nombreCompleto:`${user.nombre} ${user.apellido}`};
+  saveSession(session);
+  abrirSesion(session);
+}
+
+// ── REGISTER ──────────────────────────────────────────────────────────────────
+function registerAccount(){
+  const nombre=document.getElementById('r-nombre').value.trim();
+  const apellido=document.getElementById('r-apellido').value.trim();
+  const email=document.getElementById('r-email').value.trim().toLowerCase();
+  const pass=document.getElementById('r-pass').value;
+  const regional=document.getElementById('r-regional').value;
+  const cadena=document.getElementById('r-cadena').value;
+  const pdv=document.getElementById('r-pdv').value.trim();
+  if(!nombre||!apellido||!email||!pass) return showMsg('r-msg','Completa nombre, apellido, correo y contraseña.');
+  if(pass.length<6) return showMsg('r-msg','La contraseña debe tener al menos 6 caracteres.');
+  if(!regional) return showMsg('r-msg','Selecciona tu regional.');
+  const emailRe=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!emailRe.test(email)) return showMsg('r-msg','Ingresa un correo válido.');
+  const users=getUsers();
+  const key=`email_${email}`;
+  if(users[key]) return showMsg('r-msg','Este correo ya tiene una cuenta registrada.');
+  users[key]={nombre,apellido,email,pass,regional,cadena,pdv,
+    registrado:new Date().toISOString()};
+  saveUsers(users);
+  showMsg('r-msg','¡Cuenta creada! Iniciando sesión...','success');
+  setTimeout(()=>{
+    const session={...users[key],tipo:'account',ts:new Date().toISOString(),
+      fecha:new Date().toLocaleDateString('es-CO'),nombreCompleto:`${nombre} ${apellido}`};
+    saveSession(session); abrirSesion(session);
+  },1200);
+}
+
+function showRegister(){
+  document.getElementById('login-form').style.display='none';
+  document.getElementById('register-form').style.display='block';
+}
+function showLogin(){
+  document.getElementById('register-form').style.display='none';
+  document.getElementById('login-form').style.display='block';
+}
+
+// ── OPEN SESSION ──────────────────────────────────────────────────────────────
+function abrirSesion(session){
+  document.getElementById('login-card').style.display='none';
+  document.getElementById('session-card').style.display='block';
+  // Avatar
+  const initials=(session.nombre[0]+(session.apellido||' ')[0]).toUpperCase();
+  document.getElementById('sess-avatar').textContent=initials;
+  document.getElementById('sess-name').textContent=session.nombreCompleto;
+  document.getElementById('sess-meta').textContent=
+    `${session.regional} · ${session.cadena||'—'} · ${session.pdv||'—'}`;
+  // Pills
+  const pillsEl=document.getElementById('sess-pills');
+  pillsEl.innerHTML='';
+  const pills=[
+    session.tipo==='account'?'Cuenta propia':session.tipo==='code'?`Código: ${session.codigo}`:'Sesión rápida',
+    new Date().toLocaleDateString('es-CO')
+  ];
+  pills.forEach(txt=>{const s=document.createElement('span');s.className='pill';s.textContent=txt;pillsEl.appendChild(s);});
+  // Progress from storage
+  mostrarProgreso(session);
+  // Pass session data to eval links via URL params
+  const params=new URLSearchParams({
+    nombre:session.nombre, apellido:session.apellido||'',
+    regional:session.regional, cadena:session.cadena||'',
+    pdv:session.pdv||'', tipo:session.tipo, codigo:session.codigo||''
+  });
+  ['link-auto','link-conv','link-vent'].forEach((id,i)=>{
+    const baseHrefs=['autoevaluacion_CONVERTIR.html','evaluacion_convertir.html','evaluacion_ventas.html'];
+    document.getElementById(id).href=`${baseHrefs[i]}?${params.toString()}`;
+  });
+}
+
+// ── PROGRESS FROM HISTORY ─────────────────────────────────────────────────────
+function mostrarProgreso(session){
+  const key=`hist_${session.nombreCompleto}`;
+  let hist=[];
+  try{ hist=JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){}
+  if(!hist.length) return;
+  const wrap=document.getElementById('progress-wrap');
+  const items=document.getElementById('progress-items');
+  wrap.style.display='block';
+  items.innerHTML='';
+  const tipos=[
+    {k:'autoevaluacion',lbl:'Autoevaluación',color:'var(--purple)'},
+    {k:'evaluacion_convertir',lbl:'Eval. CONVERTIR',color:'var(--amber)'},
+    {k:'evaluacion_ventas',lbl:'Eval. Ventas',color:'var(--green)'},
+  ];
+  tipos.forEach(t=>{
+    const registros=hist.filter(h=>h.tipo===t.k);
+    if(!registros.length) return;
+    const ultimo=registros[registros.length-1];
+    const pct=parseInt(ultimo.pct)||0;
+    const div=document.createElement('div');
+    div.className='progress-row';
+    div.innerHTML=`<span class="progress-label">${t.lbl} (${registros.length}× realizado)</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${t.color}"></div></div>
+      <span class="progress-val" style="color:${t.color}">${pct}%</span>`;
+    items.appendChild(div);
+  });
+}
+
+// ── CLOSE SESSION ─────────────────────────────────────────────────────────────
+function cerrarSesion(){
+  clearSession();
+  document.getElementById('session-card').style.display='none';
+  document.getElementById('login-card').style.display='block';
+}
+
+// ── STATIC HELPER for eval pages: read session from URL + sessionStorage ──────
+// Eval pages call: window.CONV_SESSION = getConvSession();
+window.getConvSession=function(){
+  // Try sessionStorage first
+  const ss=getSession();
+  if(ss) return ss;
+  // Try URL params (when navigating directly)
+  const p=new URLSearchParams(window.location.search);
+  if(p.get('nombre')){
+    return {
+      nombre:p.get('nombre'), apellido:p.get('apellido')||'',
+      nombreCompleto:`${p.get('nombre')} ${p.get('apellido')||''}`.trim(),
+      regional:p.get('regional')||'', cadena:p.get('cadena')||'',
+      pdv:p.get('pdv')||'', tipo:p.get('tipo')||'quick',
+      codigo:p.get('codigo')||'', email:'',
+      ts:new Date().toISOString(), fecha:new Date().toLocaleDateString('es-CO')
+    };
+  }
+  return null;
+};
+
+// ── SAVE RESULT (called by eval pages after completing) ───────────────────────
+window.guardarResultadoSesion=function(tipo, pct, nivel){
+  const session=getSession();
+  if(!session) return;
+  const key=`hist_${session.nombreCompleto}`;
+  let hist=[];
+  try{ hist=JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){}
+  hist.push({tipo, pct, nivel, fecha:session.fecha, ts:new Date().toISOString()});
+  localStorage.setItem(key, JSON.stringify(hist));
+};
+
+// ── AUTO-LOGIN if session exists ──────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  const session=getSession();
+  if(session) abrirSesion(session);
+});
+</script>
+</body>
+</html>

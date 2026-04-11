@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión de Códigos — CONVERTIR</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat',system-ui,sans-serif;background:#f0eff8;color:#1a1a1a;padding:1.5rem;font-size:14px}
+.page-title{font-size:22px;font-weight:800;color:#26215C;margin-bottom:4px}
+.page-sub{font-size:13px;color:#7F77DD;margin-bottom:1.5rem}
+.card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 1px 8px rgba(83,74,183,.06);margin-bottom:16px}
+.card-title{font-size:14px;font-weight:700;color:#26215C;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+label{font-size:11px;font-weight:700;color:#444;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+input,select{width:100%;padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-family:'Montserrat',sans-serif}
+input:focus,select:focus{border-color:#534AB7;outline:none}
+.btn{padding:9px 16px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif}
+.btn-purple{background:#534AB7;color:#fff}.btn-green{background:#0F6E56;color:#fff}
+.btn-red{background:#A32D2D;color:#fff}.btn-gray{background:#F1EFE8;color:#5F5E5A}
+.btn:hover{opacity:.85}
+.field{margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:8px 10px;background:#534AB7;color:#fff;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+td{padding:8px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+tr:hover td{background:#fafafe}
+.badge{padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700}
+.b-code{background:#EEEDFE;color:#534AB7}
+.b-active{background:#E1F5EE;color:#0F6E56}
+.b-inactive{background:#F1EFE8;color:#5F5E5A}
+.code-big{font-size:20px;font-weight:800;letter-spacing:3px;color:#534AB7;font-family:'Montserrat',sans-serif}
+.msg{font-size:12px;padding:8px 12px;border-radius:8px;margin-top:8px;font-weight:500;display:none}
+.msg.ok{background:#E1F5EE;color:#0F6E56}.msg.err{background:#FCEBEB;color:#A32D2D}
+.search-row{display:flex;gap:8px;margin-bottom:12px}
+.search-row input{flex:1}
+.filters{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.filters select{width:auto;min-width:140px}
+.empty{text-align:center;padding:30px;color:#999;font-size:13px}
+.nav-back{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#534AB7;text-decoration:none;font-weight:600;margin-bottom:1.5rem}
+</style>
+</head>
+<body>
+<a href="dashboard_coordinador.html" class="nav-back">← Volver al dashboard</a>
+<div class="page-title">Gestión de códigos de promotores</div>
+<div class="page-sub">Crea, edita y administra los códigos de acceso de cada promotor</div>
+
+<!-- CREAR CÓDIGO -->
+<div class="card">
+  <div class="card-title">Crear nuevo código de promotor</div>
+  <div class="grid3">
+    <div class="field"><label>Nombre</label><input type="text" id="new-nombre" placeholder="Nombre del promotor"></div>
+    <div class="field"><label>Apellido</label><input type="text" id="new-apellido" placeholder="Apellido"></div>
+    <div class="field"><label>Código (se genera automático si lo dejas vacío)</label>
+      <input type="text" id="new-codigo" placeholder="SPB-2026-001" style="text-transform:uppercase;letter-spacing:1px">
+    </div>
+  </div>
+  <div class="grid3">
+    <div class="field"><label>Regional</label>
+      <select id="new-regional">
+        <option value="">— Selecciona —</option>
+        <option>Antioquia</option><option>Centro</option><option>Eje Cafetero</option>
+        <option>Norte</option><option>Occidente</option><option>Oriente</option>
+      </select>
+    </div>
+    <div class="field"><label>Cadena</label>
+      <select id="new-cadena">
+        <option value="">— Selecciona —</option>
+        <option>ALMACENES ÉXITO S.A</option><option>ALMACENES MAXIMO S.A.S. PEPE GANGA</option>
+        <option>CENCOSUD COLOMBIA S.A.</option><option>COLOMBIANA DE COMERCIO Y/O ALKOSTO S.A.</option>
+        <option>FALABELLA</option><option>MECANELECTRO S.A.S</option>
+        <option>SODIMAC COLOMBIA S.A.(HOMECENTER)</option>
+        <option>SUPERTIENDAS Y DROGUERIAS OLIMPICAS S.A.</option><option>PANAMERICANA</option>
+      </select>
+    </div>
+    <div class="field"><label>PIN (opcional, 4 dígitos)</label>
+      <input type="text" id="new-pin" placeholder="1234" maxlength="4" pattern="[0-9]*">
+    </div>
+  </div>
+  <div class="field"><label>PDV</label>
+    <input type="text" id="new-pdv" placeholder="Nombre de la tienda">
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="btn btn-purple" onclick="crearCodigo()">Crear código</button>
+    <button class="btn btn-gray" onclick="autoGenerarCodigo()">Generar código automático</button>
+  </div>
+  <div class="msg" id="new-msg"></div>
+  <div id="codigo-generado" style="display:none;margin-top:12px;padding:12px;background:#EEEDFE;border-radius:10px">
+    <div style="font-size:11px;color:#534AB7;font-weight:700;margin-bottom:4px">CÓDIGO GENERADO</div>
+    <div class="code-big" id="codigo-display">—</div>
+    <div style="font-size:11px;color:#7F77DD;margin-top:4px">Entrégale este código al promotor para que acceda al sistema.</div>
+  </div>
+</div>
+
+<!-- LISTA DE CÓDIGOS -->
+<div class="card">
+  <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+    Promotores registrados
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-green" onclick="exportarCSV()" style="font-size:11px;padding:6px 12px">Exportar CSV</button>
+      <button class="btn btn-gray" onclick="renderLista()" style="font-size:11px;padding:6px 12px">Actualizar</button>
+    </div>
+  </div>
+  <div class="search-row">
+    <input type="text" id="search-input" placeholder="Buscar por nombre, código o regional..." oninput="renderLista()">
+  </div>
+  <div class="filters">
+    <select id="f-regional" onchange="renderLista()">
+      <option value="">Todas las regionales</option>
+      <option>Antioquia</option><option>Centro</option><option>Eje Cafetero</option>
+      <option>Norte</option><option>Occidente</option><option>Oriente</option>
+    </select>
+    <select id="f-cadena" onchange="renderLista()">
+      <option value="">Todas las cadenas</option>
+      <option>ALMACENES ÉXITO S.A</option><option>ALMACENES MAXIMO S.A.S. PEPE GANGA</option>
+      <option>CENCOSUD COLOMBIA S.A.</option><option>COLOMBIANA DE COMERCIO Y/O ALKOSTO S.A.</option>
+      <option>FALABELLA</option><option>MECANELECTRO S.A.S</option>
+      <option>SODIMAC COLOMBIA S.A.(HOMECENTER)</option>
+      <option>SUPERTIENDAS Y DROGUERIAS OLIMPICAS S.A.</option><option>PANAMERICANA</option>
+    </select>
+  </div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>Código</th><th>Nombre completo</th><th>Regional</th>
+        <th>Cadena</th><th>PDV</th><th>PIN</th><th>Creado</th><th>Acciones</th>
+      </tr></thead>
+      <tbody id="tabla-promotores"></tbody>
+    </table>
+    <div id="lista-empty" class="empty" style="display:none">Sin promotores registrados aún.</div>
+  </div>
+  <div style="font-size:11px;color:#999;margin-top:10px" id="lista-count"></div>
+</div>
+
+<script>
+function getUsers(){try{return JSON.parse(localStorage.getItem('conv_users')||'{}');}catch(e){return{};}}
+function saveUsers(u){localStorage.setItem('conv_users',JSON.stringify(u));}
+
+function showMsg(id,text,type='ok'){
+  const el=document.getElementById(id);
+  el.textContent=text;el.className='msg '+type;el.style.display='block';
+  setTimeout(()=>el.style.display='none',3500);
+}
+
+let nextNum=null;
+function getNextNum(){
+  if(nextNum) return nextNum;
+  const users=getUsers();
+  let max=0;
+  Object.keys(users).forEach(k=>{
+    const m=k.match(/SPB-\d{4}-(\d+)/);
+    if(m) max=Math.max(max,parseInt(m[1]));
+  });
+  nextNum=max+1;
+  return nextNum;
+}
+
+function autoGenerarCodigo(){
+  const n=getNextNum();
+  const codigo=`SPB-2026-${String(n).padStart(3,'0')}`;
+  document.getElementById('new-codigo').value=codigo;
+}
+
+function crearCodigo(){
+  const nombre=document.getElementById('new-nombre').value.trim();
+  const apellido=document.getElementById('new-apellido').value.trim();
+  let codigo=document.getElementById('new-codigo').value.trim().toUpperCase();
+  const regional=document.getElementById('new-regional').value;
+  const cadena=document.getElementById('new-cadena').value;
+  const pin=document.getElementById('new-pin').value.trim();
+  const pdv=document.getElementById('new-pdv').value.trim();
+  if(!nombre||!apellido) return showMsg('new-msg','Ingresa nombre y apellido del promotor.','err');
+  if(!regional) return showMsg('new-msg','Selecciona la regional.','err');
+  if(!codigo){
+    const n=getNextNum();
+    codigo=`SPB-2026-${String(n).padStart(3,'0')}`;
+  }
+  const users=getUsers();
+  if(users[codigo]) return showMsg('new-msg','Este código ya existe. Usa otro código.','err');
+  users[codigo]={nombre,apellido,codigo,regional,cadena,pdv,pin,
+    creado:new Date().toISOString(),activo:true};
+  saveUsers(users);
+  nextNum=null; // reset counter
+  // Show generated code
+  document.getElementById('codigo-display').textContent=codigo;
+  document.getElementById('codigo-generado').style.display='block';
+  showMsg('new-msg',`Promotor ${nombre} ${apellido} registrado con código ${codigo}`,'ok');
+  // Clear form
+  ['new-nombre','new-apellido','new-codigo','new-pin','new-pdv'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('new-regional').value='';
+  document.getElementById('new-cadena').value='';
+  renderLista();
+}
+
+function renderLista(){
+  const q=(document.getElementById('search-input').value||'').toLowerCase();
+  const fReg=document.getElementById('f-regional').value;
+  const fCad=document.getElementById('f-cadena').value;
+  const users=getUsers();
+  const promotores=Object.entries(users)
+    .filter(([k])=>!k.startsWith('email_')&&k!=='admin'&&!k.startsWith('admin_'))
+    .map(([k,v])=>({...v,key:k}));
+  const filtrado=promotores.filter(p=>{
+    const txt=`${p.nombre} ${p.apellido} ${p.codigo} ${p.regional}`.toLowerCase();
+    if(q&&!txt.includes(q)) return false;
+    if(fReg&&p.regional!==fReg) return false;
+    if(fCad&&p.cadena!==fCad) return false;
+    return true;
+  });
+  const tbody=document.getElementById('tabla-promotores');
+  const empty=document.getElementById('lista-empty');
+  if(!filtrado.length){
+    tbody.innerHTML='';empty.style.display='block';
+    document.getElementById('lista-count').textContent='';return;
+  }
+  empty.style.display='none';
+  document.getElementById('lista-count').textContent=`Mostrando ${filtrado.length} de ${promotores.length} promotores`;
+  tbody.innerHTML=filtrado.map(p=>`
+    <tr>
+      <td><span class="badge b-code">${p.codigo||p.key}</span></td>
+      <td style="font-weight:600">${p.nombre} ${p.apellido}</td>
+      <td>${p.regional||'—'}</td>
+      <td style="font-size:11px">${p.cadena||'—'}</td>
+      <td style="font-size:11px">${p.pdv||'—'}</td>
+      <td>${p.pin?'••••':'<span style="color:#999">Sin PIN</span>'}</td>
+      <td style="font-size:11px;color:#999">${p.creado?new Date(p.creado).toLocaleDateString('es-CO'):'—'}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-gray" style="padding:4px 8px;font-size:10px"
+            onclick="copiarCodigo('${p.codigo||p.key}')">Copiar</button>
+          <button class="btn btn-red" style="padding:4px 8px;font-size:10px"
+            onclick="eliminarCodigo('${p.key}')">Eliminar</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function copiarCodigo(codigo){
+  navigator.clipboard.writeText(codigo).then(()=>{
+    showMsg('new-msg',`Código ${codigo} copiado al portapapeles.`,'ok');
+  }).catch(()=>{
+    prompt('Copia este código manualmente:', codigo);
+  });
+}
+
+function eliminarCodigo(key){
+  if(!confirm('¿Eliminar este promotor? Sus evaluaciones históricas no se borrarán.')) return;
+  const users=getUsers();
+  delete users[key];
+  saveUsers(users);
+  renderLista();
+}
+
+function exportarCSV(){
+  const users=getUsers();
+  const promotores=Object.entries(users)
+    .filter(([k])=>!k.startsWith('email_')&&k!=='admin'&&!k.startsWith('admin_'))
+    .map(([k,v])=>v);
+  if(!promotores.length){alert('Sin promotores para exportar.');return;}
+  let csv='Código,Nombre,Apellido,Regional,Cadena,PDV,Tiene PIN,Fecha creación\n';
+  promotores.forEach(p=>{
+    csv+=`"${p.codigo||''}","${p.nombre||''}","${p.apellido||''}","${p.regional||''}","${p.cadena||''}","${p.pdv||''}","${p.pin?'Sí':'No'}","${p.creado?new Date(p.creado).toLocaleDateString('es-CO'):''}" \n`;
+  });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`Promotores_CONVERTIR_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// Init
+renderLista();
+</script>
+</body>
+</html>
