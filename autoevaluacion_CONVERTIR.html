@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<script src="sesion_integracion.js"></script>
 <meta charset="UTF-8">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -98,7 +97,7 @@ select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-
   <label style="font-size:12px;color:var(--color-text-secondary,#666);display:block;margin-bottom:4px">Nombre completo</label>
   <input type="text" id="nombre" placeholder="Tu nombre completo" style="width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:8px;font-size:13px;background:#fff">
 </div>
-</div class="Regional" >
+<div class="reg-wrap" style="margin-bottom:10px">
   <label style="font-size:12px;color:var(--color-text-secondary,#666);display:block;margin-bottom:4px">Regional</label>
   <select class="datos-reg" id="regional">
     <option value="" class="option-placeholder">— Selecciona tu regional —</option>
@@ -561,5 +560,6 @@ function enviarSheets(){
   .catch(()=>{if(st){st.textContent='⚠ No se pudo guardar. Revisa tu conexión.';st.style.color='#854F0B';}});
 }
 </script>
+<script src="sesion_integracion.js"></script>
 </body>
 </html>
