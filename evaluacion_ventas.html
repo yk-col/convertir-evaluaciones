@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Evaluación de Ventas — CONVERTIR</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="sesion_integracion.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Montserrat',system-ui,sans-serif;font-size:14px;color:#1a1a1a;background:#f9f8ff;padding:1rem}
@@ -610,6 +609,9 @@ function guardarDatos() {
   .then(() => { if(st){st.textContent = '✓ Datos guardados automáticamente.'; st.style.color = '#0F6E56';} })
   .catch(() => { if(st){st.textContent = '⚠ No se pudo guardar. Revisa tu conexión.'; st.style.color = '#854F0B';} });
 }
+
+
 </script>
+<script src="sesion_integracion.js"></script>
 </body>
 </html>
