@@ -290,6 +290,8 @@ tr:hover td{background:#fafafe}
         <input type="file" id="excel-file" accept=".xlsx,.xls,.csv" style="margin-bottom:10px">
         <button class="btn-sm btn-green" onclick="procesarExcel()">Procesar Excel</button>
         <div id="excel-mapping" style="display:none;margin-top:10px">
+          <label>Columna Nombre:</label>
+          <select id="col-nombre"></select>
           <label>Columna Porcentaje:</label>
           <select id="col-porcentaje"></select>
           <label>Columna Cumplimiento Objetivos:</label>
@@ -979,6 +981,7 @@ function showSec(id,el){
 
 // ── ANALISIS EXCEL ──
 let excelData = [];
+let colNombre = -1;
 let colPorcentaje = -1;
 let colCumplimiento = -1;
 
@@ -994,17 +997,26 @@ function procesarExcel() {
     excelData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
     if (excelData.length < 2) { alert('El archivo debe tener al menos una fila de encabezados y una de datos.'); return; }
     const headers = excelData[0];
+    document.getElementById('col-nombre').innerHTML = headers.map((h, i) => `<option value="${i}">${h || 'Col ' + (i+1)}</option>`).join('');
     document.getElementById('col-porcentaje').innerHTML = headers.map((h, i) => `<option value="${i}">${h || 'Col ' + (i+1)}</option>`).join('');
     document.getElementById('col-cumplimiento').innerHTML = headers.map((h, i) => `<option value="${i}">${h || 'Col ' + (i+1)}</option>`).join('');
+    // Auto-select based on headers
+    let nombreIdx = headers.findIndex(h => h && h.toLowerCase().includes('personal'));
+    let porcIdx = headers.findIndex(h => h && h.toLowerCase().includes('total cumplimiento') && !h.toLowerCase().includes('2'));
+    let cumpIdx = headers.findIndex(h => h && h.toLowerCase().includes('total cumplimiento2'));
+    if (nombreIdx >= 0) document.getElementById('col-nombre').value = nombreIdx;
+    if (porcIdx >= 0) document.getElementById('col-porcentaje').value = porcIdx;
+    if (cumpIdx >= 0) document.getElementById('col-cumplimiento').value = cumpIdx;
     document.getElementById('excel-mapping').style.display = 'block';
   };
   reader.readAsArrayBuffer(file);
 }
 
 function aplicarMapping() {
+  colNombre = parseInt(document.getElementById('col-nombre').value);
   colPorcentaje = parseInt(document.getElementById('col-porcentaje').value);
   colCumplimiento = parseInt(document.getElementById('col-cumplimiento').value);
-  if (colPorcentaje === colCumplimiento) { alert('Selecciona columnas diferentes.'); return; }
+  if (colPorcentaje === colCumplimiento || colNombre === colPorcentaje || colNombre === colCumplimiento) { alert('Selecciona columnas diferentes.'); return; }
   categorizarPromotores();
   renderResultados();
   document.getElementById('analisis-resultados').style.display = 'block';
@@ -1078,7 +1090,7 @@ function renderResultados() {
   let tableHtml = '<table><thead><tr><th>Nombre</th><th>Porcentaje</th><th>Cumplimiento</th><th>Categoría</th></tr></thead><tbody>';
   excelData.slice(1).forEach(row => {
     tableHtml += `<tr>
-      <td>${row[1] || '—'}</td>
+      <td>${row[colNombre] || '—'}</td>
       <td>${isNaN(row.porcentaje) ? '—' : row.porcentaje + '%'}</td>
       <td>${isNaN(row.cumplimiento) ? '—' : row.cumplimiento + '%'}</td>
       <td><span class="badge" style="background:${colors[row.categoria] || '#999'}">${row.categoria}</span></td>
