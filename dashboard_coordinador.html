@@ -290,13 +290,10 @@ tr:hover td{background:#fafafe}
         <input type="file" id="excel-file" accept=".xlsx,.xls,.csv" style="margin-bottom:10px">
         <button class="btn-sm btn-green" onclick="procesarExcel()">Procesar Excel</button>
         <div id="excel-mapping" style="display:none;margin-top:10px">
-          <label>Columna Nombre:</label>
-          <select id="col-nombre"></select>
-          <label>Columna Porcentaje:</label>
-          <select id="col-porcentaje"></select>
-          <label>Columna Cumplimiento Objetivos:</label>
-          <select id="col-cumplimiento"></select>
-          <button class="btn-sm btn-purple" onclick="aplicarMapping()">Aplicar y Categorizar</button>
+          <div id="excel-mapping-summary" style="font-size:12px;color:#444;line-height:1.5;">
+            Se detectarán automáticamente los campos de Nombre, Porcentaje y Cumplimiento desde los encabezados del archivo.
+          </div>
+          <button class="btn-sm btn-purple" onclick="clasificarExcel()">Clasificar promotores</button>
         </div>
       </div>
       <div id="analisis-resultados" style="display:none">
@@ -984,6 +981,51 @@ let excelData = [];
 let colNombre = -1;
 let colPorcentaje = -1;
 let colCumplimiento = -1;
+let detectedFields = null;
+
+function findHeaderIndex(headers, patterns, excludePatterns = []) {
+  const normalize = value => String(value || '').trim().toLowerCase();
+  return headers.findIndex(header => {
+    const value = normalize(header);
+    if (!value) return false;
+    if (excludePatterns.some(ex => value.includes(ex))) return false;
+    return patterns.some(pattern => value.includes(pattern));
+  });
+}
+
+function detectarCampos(headers) {
+  const normalize = value => String(value || '').trim().toLowerCase();
+  const keys = headers.map(normalize);
+  const nombreIdx = findHeaderIndex(headers, ['personal', 'nombre', 'promotor']);
+  let porcentajeIdx = findHeaderIndex(headers, ['total cumplimiento', 'cumplimiento', 'sell out', 'participación', 'ejecución comercial', 'cobertura']);
+  let cumplimientoIdx = findHeaderIndex(headers, ['total cumplimiento2', 'cumplimiento2', 'cumplimiento 2']);
+  if (cumplimientoIdx < 0) {
+    const totalCumplimientos = headers.reduce((acc, h, i) => {
+      if (normalize(h).includes('total cumplimiento')) acc.push(i);
+      return acc;
+    }, []);
+    if (totalCumplimientos.length > 1) {
+      cumplimientoIdx = totalCumplimientos[1];
+    }
+  }
+  if (porcentajeIdx < 0 && cumplimientoIdx >= 0) {
+    porcentajeIdx = cumplimientoIdx;
+  }
+  if (porcentajeIdx < 0) {
+    porcentajeIdx = findHeaderIndex(headers, ['sell out', 'participación', 'ejecución comercial', 'cobertura']);
+  }
+  if (cumplimientoIdx < 0) {
+    cumplimientoIdx = porcentajeIdx;
+  }
+  return {
+    nombreIdx,
+    porcentajeIdx,
+    cumplimientoIdx,
+    nombreLabel: headers[nombreIdx] || 'No detectado',
+    porcentajeLabel: headers[porcentajeIdx] || 'No detectado',
+    cumplimientoLabel: headers[cumplimientoIdx] || 'No detectado'
+  };
+}
 
 function procesarExcel() {
   const file = document.getElementById('excel-file').files[0];
@@ -997,56 +1039,43 @@ function procesarExcel() {
     excelData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
     if (excelData.length < 2) { alert('El archivo debe tener al menos una fila de encabezados y una de datos.'); return; }
     const headers = excelData[0];
-    document.getElementById('col-nombre').innerHTML = headers.map((h, i) => `<option value="${i}">${h || 'Col ' + (i+1)}</option>`).join('');
-    document.getElementById('col-porcentaje').innerHTML = headers.map((h, i) => `<option value="${i}">${h || 'Col ' + (i+1)}</option>`).join('');
-    document.getElementById('col-cumplimiento').innerHTML = headers.map((h, i) => `<option value="${i}">${h || 'Col ' + (i+1)}</option>`).join('');
-    // Auto-select based on headers
-    const normalize = value => String(value || '').trim().toLowerCase();
-    const headerKeys = headers.map(normalize);
-    let nombreIdx = headerKeys.findIndex(h => h.includes('personal') || h.includes('nombre') || h.includes('promotor'));
-    let porcIdx = headerKeys.findIndex(h => (h.includes('total cumplimiento') || h.includes('cumplimiento')) && !h.includes('2'));
-    if (porcIdx < 0) porcIdx = headerKeys.findIndex(h => h.includes('sell out') || h.includes('participación') || h.includes('ejecución comercial'));
-    let cumpIdx = headerKeys.findIndex((h, i) => (h.includes('total cumplimiento2') || (h.includes('cumplimiento') && h.includes('2'))) && i !== porcIdx);
-    if (cumpIdx < 0) cumpIdx = headerKeys.map((h, i) => [h, i]).filter(([h]) => h.includes('total cumplimiento')).map(([h, i]) => i)[1] || -1;
-    if (nombreIdx >= 0) document.getElementById('col-nombre').value = nombreIdx;
-    if (porcIdx >= 0) document.getElementById('col-porcentaje').value = porcIdx;
-    if (cumpIdx >= 0) document.getElementById('col-cumplimiento').value = cumpIdx;
-    ['col-nombre','col-porcentaje','col-cumplimiento'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el && el.options.length && el.selectedIndex < 0) el.selectedIndex = 0;
-    });
+    detectedFields = detectarCampos(headers);
+    if (detectedFields.nombreIdx < 0 || detectedFields.porcentajeIdx < 0) {
+      alert('No se detectaron correctamente los campos de Nombre y Porcentaje. Revisa los encabezados del Excel.');
+      return;
+    }
+    colNombre = detectedFields.nombreIdx;
+    colPorcentaje = detectedFields.porcentajeIdx;
+    colCumplimiento = detectedFields.cumplimientoIdx;
+    document.getElementById('excel-mapping-summary').innerHTML = `Campos detectados:<br>Nombre: <b>${detectedFields.nombreLabel}</b><br>Porcentaje: <b>${detectedFields.porcentajeLabel}</b><br>Cumplimiento: <b>${detectedFields.cumplimientoLabel}</b>`;
     document.getElementById('excel-mapping').style.display = 'block';
   };
   reader.readAsArrayBuffer(file);
 }
 
-function aplicarMapping() {
-  const getIdx = (id) => {
-    const el = document.getElementById(id);
-    if (!el) return NaN;
-    const value = String(el.value || '').trim();
-    if (value === '' && el.options.length) {
-      return parseInt(el.options[0].value, 10);
-    }
-    const n = parseInt(value, 10);
-    return Number.isInteger(n) ? n : NaN;
-  };
-  colNombre = getIdx('col-nombre');
-  colPorcentaje = getIdx('col-porcentaje');
-  colCumplimiento = getIdx('col-cumplimiento');
-  if (isNaN(colNombre) || isNaN(colPorcentaje) || isNaN(colCumplimiento)) {
-    alert('No se pudieron leer las columnas seleccionadas. Revisa los selectores de Nombre, Porcentaje y Cumplimiento.');
+function clasificarExcel() {
+  if (!detectedFields) {
+    alert('Primero procesa el archivo Excel.');
     return;
   }
-  if (colPorcentaje === colCumplimiento || colNombre === colPorcentaje || colNombre === colCumplimiento) {
-    alert('Selecciona columnas diferentes.');
+  if (colNombre < 0 || colPorcentaje < 0) {
+    alert('No se han detectado correctamente los campos de Nombre y Porcentaje.');
     return;
+  }
+  if (colNombre === colPorcentaje || colNombre === colCumplimiento) {
+    alert('El campo Nombre no puede ser el mismo que Porcentaje o Cumplimiento. Revisa el archivo Excel.');
+    return;
+  }
+  if (colPorcentaje === colCumplimiento) {
+    const summary = document.getElementById('excel-mapping-summary');
+    if (summary) {
+      summary.innerHTML += '<br><small style="color:#A32D2D">Se usará el mismo campo para Porcentaje y Cumplimiento porque no se detectó un campo separado.</small>';
+    }
   }
   categorizarPromotores();
   renderResultados();
   document.getElementById('analisis-resultados').style.display = 'block';
 }
-
 function categorizarPromotores() {
   excelData.slice(1).forEach(row => {
     const porcentaje = parseFloat(String(row[colPorcentaje] || '').replace('%', '').replace(',', '.'));
