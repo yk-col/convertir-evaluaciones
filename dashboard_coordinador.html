@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Montserrat',system-ui,sans-serif;background:#f0eff8;color:#1a1a1a;min-height:100vh}
@@ -164,7 +165,8 @@ tr:hover td{background:#fafafe}
       <div class="nav-item" onclick="showSec('eval-ventas',this)">◆ Eval. Ventas</div>
       <div class="nav-item" onclick="showSec('promotores',this);renderHistorial()">👤 Promotores</div>
       <div class="nav-sep"></div>
-      <div class="nav-item nav-admin" id="admin-nav" style="display:none" onclick="showSec('admin',this);renderUsers()">⚙ Administración</div>
+      <div class="nav-item" onclick="showSec('analisis-excel',this)">📊 Análisis Excel</div>
+      <div class="nav-sep"></div>
     </div>
     <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
   </div>
@@ -277,6 +279,43 @@ tr:hover td{background:#fafafe}
       </div>
       <div id="promotores-list"></div>
       <div id="promotor-detail" style="display:none"></div>
+    </div>
+
+    <!-- ANALISIS EXCEL -->
+    <div id="sec-analisis-excel" style="display:none">
+      <div class="page-header"><div><div class="page-title">Análisis Excel</div><div class="page-sub">Categorización de promotores</div></div></div>
+      <div class="card">
+        <div class="card-title">Subir archivo Excel</div>
+        <input type="file" id="excel-file" accept=".xlsx,.xls,.csv" style="margin-bottom:10px">
+        <button class="btn-sm btn-green" onclick="procesarExcel()">Procesar Excel</button>
+        <div id="excel-mapping" style="display:none;margin-top:10px">
+          <label>Columna Porcentaje:</label>
+          <select id="col-porcentaje"></select>
+          <label>Columna Cumplimiento Objetivos:</label>
+          <select id="col-cumplimiento"></select>
+          <button class="btn-sm btn-purple" onclick="aplicarMapping()">Aplicar y Categorizar</button>
+        </div>
+      </div>
+      <div id="analisis-resultados" style="display:none">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-val" id="count-exploradores">—</div><div class="stat-lbl">Exploradores</div></div>
+          <div class="stat-card"><div class="stat-val" id="count-impulsores">—</div><div class="stat-lbl">Impulsores</div></div>
+          <div class="stat-card"><div class="stat-val" id="count-potenciadores">—</div><div class="stat-lbl">Potenciadores</div></div>
+          <div class="stat-card"><div class="stat-val" id="total-promotores">—</div><div class="stat-lbl">Total Promotores</div></div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card"><div class="chart-title">Distribución de Categorías</div><div class="chart-wrap"><canvas id="chart-categorias"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Porcentaje vs Cumplimiento</div><div class="chart-wrap"><canvas id="chart-scatter"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Tabla de Promotores Categorizados</div>
+          <div class="table-wrap"><div id="tabla-categorizados"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Planes de Trabajo</div>
+          <div id="planes-trabajo"></div>
+        </div>
+      </div>
     </div>
 
     <!-- ADMIN -->
@@ -932,6 +971,157 @@ function showSec(id,el){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el)el.classList.add('active');
   if(window.innerWidth<=768)closeSidebar();
+}
+
+// ── ANALISIS EXCEL ──
+let excelData = [];
+let colPorcentaje = -1;
+let colCumplimiento = -1;
+
+function procesarExcel() {
+  const file = document.getElementById('excel-file').files[0];
+  if (!file) { alert('Selecciona un archivo Excel.'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, {type: 'array'});
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    excelData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+    if (excelData.length < 2) { alert('El archivo debe tener al menos una fila de encabezados y una de datos.'); return; }
+    const headers = excelData[0];
+    document.getElementById('col-porcentaje').innerHTML = headers.map((h, i) => `<option value="${i}">${h || 'Col ' + (i+1)}</option>`).join('');
+    document.getElementById('col-cumplimiento').innerHTML = headers.map((h, i) => `<option value="${i}">${h || 'Col ' + (i+1)}</option>`).join('');
+    document.getElementById('excel-mapping').style.display = 'block';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function aplicarMapping() {
+  colPorcentaje = parseInt(document.getElementById('col-porcentaje').value);
+  colCumplimiento = parseInt(document.getElementById('col-cumplimiento').value);
+  if (colPorcentaje === colCumplimiento) { alert('Selecciona columnas diferentes.'); return; }
+  categorizarPromotores();
+  renderResultados();
+  document.getElementById('analisis-resultados').style.display = 'block';
+}
+
+function categorizarPromotores() {
+  excelData.slice(1).forEach(row => {
+    const porcentaje = parseFloat(String(row[colPorcentaje] || '').replace('%', '').replace(',', '.'));
+    const cumplimiento = parseFloat(String(row[colCumplimiento] || '').replace('%', '').replace(',', '.'));
+    let categoria = 'Sin Categoría';
+    if (!isNaN(porcentaje) && !isNaN(cumplimiento)) {
+      if (porcentaje <= 50 && cumplimiento <= 80) categoria = 'Explorador';
+      else if (porcentaje > 50 && porcentaje <= 80 && cumplimiento > 80 && cumplimiento <= 90) categoria = 'Impulsor';
+      else if (porcentaje > 80 && porcentaje <= 100 && cumplimiento > 90) categoria = 'Potenciador';
+      else if (porcentaje > 100 && cumplimiento > 90) categoria = 'Potenciador'; // Sobrecumplimiento
+    }
+    row.categoria = categoria;
+    row.porcentaje = porcentaje;
+    row.cumplimiento = cumplimiento;
+  });
+}
+
+function renderResultados() {
+  const exploradores = excelData.slice(1).filter(r => r.categoria === 'Explorador');
+  const impulsores = excelData.slice(1).filter(r => r.categoria === 'Impulsor');
+  const potenciadores = excelData.slice(1).filter(r => r.categoria === 'Potenciador');
+  document.getElementById('count-exploradores').textContent = exploradores.length;
+  document.getElementById('count-impulsores').textContent = impulsores.length;
+  document.getElementById('count-potenciadores').textContent = potenciadores.length;
+  document.getElementById('total-promotores').textContent = excelData.length - 1;
+
+  // Charts
+  dc('cat');
+  chartRefs.cat = new Chart(document.getElementById('chart-categorias'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Exploradores', 'Impulsores', 'Potenciadores'],
+      datasets: [{
+        data: [exploradores.length, impulsores.length, potenciadores.length],
+        backgroundColor: ['#A32D2D', '#854F0B', '#0F6E56'],
+        borderWidth: 0
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+  });
+
+  dc('sca');
+  const scatterData = excelData.slice(1).filter(r => !isNaN(r.porcentaje) && !isNaN(r.cumplimiento)).map(r => ({ x: r.porcentaje, y: r.cumplimiento, categoria: r.categoria }));
+  const colors = { Explorador: '#A32D2D', Impulsor: '#854F0B', Potenciador: '#0F6E56' };
+  chartRefs.sca = new Chart(document.getElementById('chart-scatter'), {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Promotores',
+        data: scatterData,
+        backgroundColor: scatterData.map(d => colors[d.categoria] || '#999'),
+        pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { title: { display: true, text: 'Porcentaje (%)' } },
+        y: { title: { display: true, text: 'Cumplimiento Objetivos (%)' } }
+      }
+    }
+  });
+
+  // Table
+  let tableHtml = '<table><thead><tr><th>Nombre</th><th>Porcentaje</th><th>Cumplimiento</th><th>Categoría</th></tr></thead><tbody>';
+  excelData.slice(1).forEach(row => {
+    tableHtml += `<tr>
+      <td>${row[1] || '—'}</td>
+      <td>${isNaN(row.porcentaje) ? '—' : row.porcentaje + '%'}</td>
+      <td>${isNaN(row.cumplimiento) ? '—' : row.cumplimiento + '%'}</td>
+      <td><span class="badge" style="background:${colors[row.categoria] || '#999'}">${row.categoria}</span></td>
+    </tr>`;
+  });
+  tableHtml += '</tbody></table>';
+  document.getElementById('tabla-categorizados').innerHTML = tableHtml;
+
+  // Planes de Trabajo
+  const planes = generarPlanesTrabajo(exploradores, impulsores, potenciadores);
+  document.getElementById('planes-trabajo').innerHTML = planes;
+}
+
+function generarPlanesTrabajo(exploradores, impulsores, potenciadores) {
+  let html = '';
+  const planesExploradores = [
+    'Plan de Capacitación Básica: Enfocarse en formación inicial sobre productos y procesos.',
+    'Mentoría Individual: Asignar un mentor para guiar el desarrollo inicial.',
+    'Evaluaciones Frecuentes: Realizar revisiones semanales para medir progreso.',
+    'Recursos de Aprendizaje: Proporcionar materiales básicos y tutoriales.'
+  ];
+  const planesImpulsores = [
+    'Plan de Desarrollo Intermedio: Capacitación avanzada en técnicas de venta.',
+    'Proyectos Piloto: Asignar tareas de mayor responsabilidad para ganar experiencia.',
+    'Feedback Constructivo: Sesiones regulares de retroalimentación.',
+    'Objetivos Escalables: Establecer metas progresivas para mejorar cumplimiento.'
+  ];
+  const planesPotenciadores = [
+    'Plan de Liderazgo Estratégico: Preparación para roles de liderazgo.',
+    'Innovación y Mejora: Involucrar en proyectos de optimización.',
+    'Mentoría a Otros: Convertir en mentores para nuevos promotores.',
+    'Bonos por Rendimiento: Incentivos por sobrecumplimiento y resultados excepcionales.'
+  ];
+
+  html += '<div class="card"><div class="card-title">Planes para Exploradores (' + exploradores.length + ')</div><ul>';
+  planesExploradores.forEach(p => html += '<li>' + p + '</li>');
+  html += '</ul></div>';
+
+  html += '<div class="card"><div class="card-title">Planes para Impulsores (' + impulsores.length + ')</div><ul>';
+  planesImpulsores.forEach(p => html += '<li>' + p + '</li>');
+  html += '</ul></div>';
+
+  html += '<div class="card"><div class="card-title">Planes para Potenciadores (' + potenciadores.length + ')</div><ul>';
+  planesPotenciadores.forEach(p => html += '<li>' + p + '</li>');
+  html += '</ul></div>';
+
+  return html;
 }
 </script>
 </body>
