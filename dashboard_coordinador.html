@@ -165,8 +165,9 @@ tr:hover td{background:#fafafe}
       <div class="nav-item" onclick="showSec('eval-ventas',this)">◆ Eval. Ventas</div>
       <div class="nav-item" onclick="showSec('promotores',this);renderHistorial()">👤 Promotores</div>
       <div class="nav-sep"></div>
-      <div class="nav-item" onclick="showSec('analisis-excel',this)">📊 Análisis Excel</div>
+      <div class="nav-item" id="nav-analisis-excel" onclick="showSec('analisis-excel',this)" style="display:none">📊 Análisis Excel</div>
       <div class="nav-sep"></div>
+      <div class="nav-item nav-admin" id="admin-nav" style="display:none" onclick="showSec('admin',this);renderUsers()">⚙ Administración</div>
     </div>
     <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
   </div>
@@ -425,6 +426,7 @@ function login(){
     if(logins.length>50)logins.splice(0,logins.length-50);
     localStorage.setItem('convertir_logins',JSON.stringify(logins));
   }
+  document.getElementById('nav-analisis-excel').style.display = found.regional === 'admin' ? 'flex' : 'none';
   if(window.innerWidth<=768)closeSidebar();
   cargarTodos();
 }
@@ -436,6 +438,8 @@ function logout(){
   document.getElementById('login-err').style.display='none';
   document.getElementById('login-role').value='';
   document.getElementById('regional-wrap').style.display='none';
+  document.getElementById('nav-analisis-excel').style.display='none';
+  document.getElementById('admin-nav').style.display='none';
   Object.values(chartRefs).forEach(c=>{try{c.destroy();}catch(e){}});chartRefs={};
 }
 
