@@ -1001,9 +1001,13 @@ function procesarExcel() {
     document.getElementById('col-porcentaje').innerHTML = headers.map((h, i) => `<option value="${i}">${h || 'Col ' + (i+1)}</option>`).join('');
     document.getElementById('col-cumplimiento').innerHTML = headers.map((h, i) => `<option value="${i}">${h || 'Col ' + (i+1)}</option>`).join('');
     // Auto-select based on headers
-    let nombreIdx = headers.findIndex(h => h && h.toLowerCase().includes('personal'));
-    let porcIdx = headers.findIndex(h => h && h.toLowerCase().includes('total cumplimiento') && !h.toLowerCase().includes('2'));
-    let cumpIdx = headers.findIndex(h => h && h.toLowerCase().includes('total cumplimiento2'));
+    const normalize = value => String(value || '').trim().toLowerCase();
+    const headerKeys = headers.map(normalize);
+    let nombreIdx = headerKeys.findIndex(h => h.includes('personal') || h.includes('nombre') || h.includes('promotor'));
+    let porcIdx = headerKeys.findIndex(h => (h.includes('total cumplimiento') || h.includes('cumplimiento')) && !h.includes('2'));
+    if (porcIdx < 0) porcIdx = headerKeys.findIndex(h => h.includes('sell out') || h.includes('participación') || h.includes('ejecución comercial'));
+    let cumpIdx = headerKeys.findIndex((h, i) => (h.includes('total cumplimiento2') || (h.includes('cumplimiento') && h.includes('2'))) && i !== porcIdx);
+    if (cumpIdx < 0) cumpIdx = headerKeys.map((h, i) => [h, i]).filter(([h]) => h.includes('total cumplimiento')).map(([h, i]) => i)[1] || -1;
     if (nombreIdx >= 0) document.getElementById('col-nombre').value = nombreIdx;
     if (porcIdx >= 0) document.getElementById('col-porcentaje').value = porcIdx;
     if (cumpIdx >= 0) document.getElementById('col-cumplimiento').value = cumpIdx;
@@ -1016,7 +1020,14 @@ function aplicarMapping() {
   colNombre = parseInt(document.getElementById('col-nombre').value);
   colPorcentaje = parseInt(document.getElementById('col-porcentaje').value);
   colCumplimiento = parseInt(document.getElementById('col-cumplimiento').value);
-  if (colPorcentaje === colCumplimiento || colNombre === colPorcentaje || colNombre === colCumplimiento) { alert('Selecciona columnas diferentes.'); return; }
+  if (isNaN(colNombre) || isNaN(colPorcentaje) || isNaN(colCumplimiento)) {
+    alert('Selecciona correctamente las tres columnas.');
+    return;
+  }
+  if (colPorcentaje === colCumplimiento || colNombre === colPorcentaje || colNombre === colCumplimiento) {
+    alert('Selecciona columnas diferentes.');
+    return;
+  }
   categorizarPromotores();
   renderResultados();
   document.getElementById('analisis-resultados').style.display = 'block';
