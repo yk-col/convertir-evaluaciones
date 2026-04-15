@@ -1011,17 +1011,31 @@ function procesarExcel() {
     if (nombreIdx >= 0) document.getElementById('col-nombre').value = nombreIdx;
     if (porcIdx >= 0) document.getElementById('col-porcentaje').value = porcIdx;
     if (cumpIdx >= 0) document.getElementById('col-cumplimiento').value = cumpIdx;
+    ['col-nombre','col-porcentaje','col-cumplimiento'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.options.length && el.selectedIndex < 0) el.selectedIndex = 0;
+    });
     document.getElementById('excel-mapping').style.display = 'block';
   };
   reader.readAsArrayBuffer(file);
 }
 
 function aplicarMapping() {
-  colNombre = parseInt(document.getElementById('col-nombre').value);
-  colPorcentaje = parseInt(document.getElementById('col-porcentaje').value);
-  colCumplimiento = parseInt(document.getElementById('col-cumplimiento').value);
+  const getIdx = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return NaN;
+    const value = String(el.value || '').trim();
+    if (value === '' && el.options.length) {
+      return parseInt(el.options[0].value, 10);
+    }
+    const n = parseInt(value, 10);
+    return Number.isInteger(n) ? n : NaN;
+  };
+  colNombre = getIdx('col-nombre');
+  colPorcentaje = getIdx('col-porcentaje');
+  colCumplimiento = getIdx('col-cumplimiento');
   if (isNaN(colNombre) || isNaN(colPorcentaje) || isNaN(colCumplimiento)) {
-    alert('Selecciona correctamente las tres columnas.');
+    alert('No se pudieron leer las columnas seleccionadas. Revisa los selectores de Nombre, Porcentaje y Cumplimiento.');
     return;
   }
   if (colPorcentaje === colCumplimiento || colNombre === colPorcentaje || colNombre === colCumplimiento) {
